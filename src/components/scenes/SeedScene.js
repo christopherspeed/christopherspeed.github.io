@@ -1,6 +1,6 @@
 import * as Dat from 'dat.gui';
 import { Scene, Color } from 'three';
-import { Flower, Land, carInterior } from 'objects';
+import { Flower, Land, CarInterior } from 'objects';
 import { BasicLights } from 'lights';
 
 class SeedScene extends Scene {
@@ -22,8 +22,8 @@ class SeedScene extends Scene {
         const land = new Land();
         const flower = new Flower(this);
         const lights = new BasicLights();
-        const carInterior = new carInterior();
-        this.add(land, flower, lights);
+        const carInterior = new CarInterior(this);
+        this.add(land, flower, carInterior, lights);
 
         // Populate GUI
         this.state.gui.add(this.state, 'rotationSpeed', -5, 5);
@@ -33,14 +33,17 @@ class SeedScene extends Scene {
         this.state.updateList.push(object);
     }
 
-    update(timeStamp) {
+    update(timeStamp, camera) {
         const { rotationSpeed, updateList } = this.state;
-        this.rotation.y = (rotationSpeed * timeStamp) / 10000;
+        //this.rotation.y = (rotationSpeed * timeStamp) / 10000;
 
         // Call update for each object in the updateList
         for (const obj of updateList) {
-            obj.update(timeStamp);
+            // i guess i don't need to modify the syntax of the function arguments, you can call update
+            // of the flower with two arguments even tho it just has one
+            obj.update(timeStamp, camera);
         }
+   
     }
 }
 
