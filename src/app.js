@@ -6,15 +6,20 @@
  * handles window resizes.
  *
  */
-import { WebGLRenderer, Vector3 } from 'three';
+import { WebGLRenderer, PerspectiveCamera, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SeedScene } from 'scenes';
-import { CameraControl } from './components/camera';
+import { InputControl } from './components/input';
 
 // Initialize core ThreeJS components
 const scene = new SeedScene();
-const camera = new CameraControl();
+const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
+const inputControl = new InputControl(camera, scene);
+
+// Set up camera
+camera.position.set(6, 1, -10);
+camera.lookAt(new Vector3(0, 1, 0));
 
 // Set up renderer, canvas, and minor CSS adjustments
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -24,17 +29,19 @@ document.body.style.margin = 0; // Removes margin around page
 document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
+/* Ew Orbit controls trash
 // Set up controls
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
 controls.minDistance = 4;
 controls.maxDistance = 16;
-controls.update();
+controls.update();*/
 
 // Render loop
 const onAnimationFrameHandler = (timeStamp) => {
-    controls.update();
+    //controls.update();
+    inputControl.update();
     renderer.render(scene, camera);
     scene.update && scene.update(timeStamp);
     window.requestAnimationFrame(onAnimationFrameHandler);
