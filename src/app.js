@@ -61,16 +61,17 @@ const radius = 1
 const sphereBody = new Body({
     mass: 5,
     shape: new Sphere(radius),
+    angularDamping: 0.4,
 })
 sphereBody.position.set(0, 5, 0)
 const boxBody = new Body({
     shape: new Box(new Vec3(.5, .5, 1)),
     mass: 100,
-    linearDamping: 0.6,
-    angularDamping: 0.9,
+    linearDamping: 0.4,
+    angularDamping: 0.4,
 })
 boxBody.position.set(0, 1.5, 0)
-// world.addBody(sphereBody);
+world.addBody(sphereBody);
 world.addBody(boxBody)
 console.log(boxBody.position)
 
@@ -79,7 +80,7 @@ const material = new MeshNormalMaterial()
 const sphereMesh = new Mesh(geometry, material)
 const box_geo = new BoxGeometry(1, 1, 2);
 const boxMesh = new Mesh(box_geo, material);
-scene.add(boxMesh)
+scene.add(boxMesh, sphereMesh)
 const groundBody = new Body({
     type: Body.STATIC,
     shape: new Plane(),
@@ -94,11 +95,11 @@ const onAnimationFrameHandler = (timeStamp) => {
     // controls.update();
     // camera.lookAt(scene.target.position);
     world.fixedStep();
-    cannonDebugger.update();
+    // cannonDebugger.update();
     
     
-    // sphereMesh.position.copy(sphereBody.position)
-    // sphereMesh.quaternion.copy(sphereBody.quaternion)
+    sphereMesh.position.copy(sphereBody.position)
+    sphereMesh.quaternion.copy(sphereBody.quaternion)
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
     renderer.render(scene, camera);
