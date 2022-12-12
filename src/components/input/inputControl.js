@@ -1,8 +1,8 @@
-import {Vector3} from "three";
+import { Vector3, Quaternion } from "three";
 
 class InputControl {
-    // Input arguments can be updated. Just pass in what ever 
-    // you want to modify for any input!
+    // IMPORTANT: Input arguments can be updated. Just pass in what ever 
+    // you want to modify for any input and set it to a var as below!
     constructor(camera, scene){
         this.state = {
             // Put states in here
@@ -16,6 +16,10 @@ class InputControl {
         // Locally where is the camera moving towards.
         this.targetLocal = new Vector3();
 
+        // Currently Not Used
+        this.rotateLocal = new Quaternion();
+        this.rotateFromEquilibrium = new Quaternion();
+
         // Speed of camera per frame of movement
         this.camSpeed = 0.35;
 
@@ -24,6 +28,7 @@ class InputControl {
 
         // Small distance to snap camera to position (instead of lerp)
         this.snap = 1e-7;
+
 
         // 0 = not being pressed
         // 0.5 = conflicting key most recently press. 
@@ -39,21 +44,26 @@ class InputControl {
             arrowleft: 0,
             arrowright: 0
         }
+
+        // Prevent right menu bring up for us poor mac users.
+        addEventListener('contextmenu', (e) => {e.preventDefault();})
         
         // function.bind(this) passes the object as context.
         // If someone knows a better way to pass this in lmk
         addEventListener('keyup', keyUpHandle.bind(this));
         addEventListener('keydown', keyDownHandle.bind(this));
+        addEventListener('mousemove', mouseMove.bind(this));
     
         // Every frame check all valid keys to see if held down 
         // and update accordingly
         this.update = function(){
-            Object.keys(this.keyMap).forEach(handleUpdate.bind(this));
+            Object.keys(this.keyMap).forEach(handleKeyUpdate.bind(this));
             // Slowly lerp towards target position
             lerpTowardTarget.bind(this)();
         }
-
-        function handleUpdate(ele){
+    
+        // IMPORTANT: Add any functionalities for keypresses here!!!!!
+        function handleKeyUpdate(ele){
             // If element not being pressed return.
             ele = ele.toLowerCase();
             // See if key is pressed down
@@ -83,6 +93,16 @@ class InputControl {
             }
         }
 
+        function mouseMove(ele){
+            // 1 for just left, 2 for just right, 1 + 2 for both
+            const button = ele.buttons;
+            const left = (button & 1 == 1);
+            const right = (button & 2 == 2);
+            if(right){
+                
+            }
+        }
+
         // Slowly lerp towards target local position. 
         function lerpTowardTarget(){
             const result = new Vector3();
@@ -99,15 +119,21 @@ class InputControl {
 
         // Check if typing is in textbox or just outside of scope(?).
         // Returns true if you shouldn't process it.
-        function checkEvent(event){
+        function checkKeyEvent(event){
             return event.isComposing || event.target.tagName === "INPUT" 
             || event.keyCode === 229;
         }
 
+
+        /* -------------------------------------------------------------
+        Don't really need to worry about what happens below this comment 
+        ---------------------------------------------------------------- */
+
+
         // For pressed down key changes key map entry to 1.
         // If opposite key already pressed down also changes opposite key to 0.5.
         function keyDownHandle(event){
-            if (checkEvent(event)) return;
+            if (checkKeyEvent(event)) return;
             const key = event.key.toLowerCase();
             if(this.keyMap[key] == undefined) return;
             this.keyMap[key] = 1;
@@ -145,7 +171,7 @@ class InputControl {
         // If opposite key still 0.5 (currently pressed down)
         // also changes opposite key to 1.
         function keyUpHandle(event){
-            if (checkEvent(event)) return;
+            if (checkKeyEvent(event)) return;
             const key = event.key.toLowerCase();
             if(this.keyMap[key] == undefined) return;
             this.keyMap[key] = 0;
