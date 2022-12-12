@@ -9,6 +9,8 @@
 import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry} from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SeedScene } from 'scenes';
+
+import { InputControl } from './components/input';
 import { SceneCustom, TestScene } from './components/scenes';
 import { World, Vec3, Body, Sphere, Plane, Box } from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger';
@@ -19,6 +21,7 @@ import CannonDebugger from 'cannon-es-debugger';
 const scene = new SceneCustom();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
+const inputControl = new InputControl(camera, scene);
 
 
 
@@ -32,6 +35,7 @@ const renderer = new WebGLRenderer({ antialias: true });
 camera.position.set(0, 3, -10);
 camera.lookAt(new Vector3(0, 0, 0));
 
+
 // Set up renderer, canvas, and minor CSS adjustments
 renderer.setPixelRatio(window.devicePixelRatio);
 const canvas = renderer.domElement;
@@ -40,13 +44,14 @@ document.body.style.margin = 0; // Removes margin around page
 document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
+/* Ew Orbit controls trash
 // Set up controls
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
 controls.minDistance = 4;
 controls.maxDistance = 16;
-controls.update();
+controls.update();*/
 
 // physics
 const world = new World(
@@ -92,7 +97,9 @@ window.addEventListener('keydown', testMove);
 // document.body.style.cursor = 'none';
 // Render loop
 const onAnimationFrameHandler = (timeStamp) => {
-    // controls.update();
+
+    //controls.update();
+    inputControl.update();
     // camera.lookAt(scene.target.position);
     world.fixedStep();
     // cannonDebugger.update();
@@ -102,6 +109,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     sphereMesh.quaternion.copy(sphereBody.quaternion)
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
+
     renderer.render(scene, camera);
     scene.update && scene.update(timeStamp);
     window.requestAnimationFrame(onAnimationFrameHandler);
@@ -156,3 +164,4 @@ function testMouseStuff(event){
     camera.rotateY(- event.movementX * 0.001)
     camera.rotateX(- event.movementY * 0.001)
 }
+
