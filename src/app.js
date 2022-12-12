@@ -22,15 +22,6 @@ const scene = new SceneCustom();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
-
-
-
-// fun stuff
-// const geometry = new BoxGeometry(1, 1, 1)
-// const material = new MeshBasicMaterial( {color: 0xffffff} );
-// const box = new Mesh( geometry, material );
-// // scene.add( box )
-
 // Set up camera
 camera.position.set(0, 30, -100);
 camera.lookAt(new Vector3(0, 0, 0));
@@ -56,20 +47,21 @@ controls.update();
 // physics
 const world = new World(
     {
-        gravity: new Vec3(0, -9.82 , 0),
+        gravity: new Vec3(0, -9.82 * 1.5 , 0),
     }
 )
 
 const cannonDebugger = new CannonDebugger(scene, world);
 
-const radius = 1
+const radius = 2
 const sphereBody = new Body({
     mass: 5,
     shape: new Sphere(radius),
     angularDamping: 0.4,
     
 })
-sphereBody.position.set(0, 5, 0)
+sphereBody.position.set(2, 5, 20)
+world.addBody(sphereBody)
 const boxBody = new Body({
     shape: new Box(new Vec3(.5, .5, 1)),
     mass: 100,
@@ -155,6 +147,16 @@ const bump = new Body({
 })
 bump.position.set(0, -0.5, 15)
 bump.quaternion.setFromEuler(- Math.PI / 6, 0, Math.PI / 2)
+const bump2 = new Body({
+    type: Body.STATIC,
+    shape: new Box(new Vec3(1, 5, 5)),
+    material: new Material({
+        friction: 0
+    })
+})
+bump2.position.set(0, -0.5, 30)
+bump2.quaternion.setFromEuler(Math.PI / 6, 0, Math.PI / 2)
+world.addBody(bump2)
 world.addBody(bump)
 //window.addEventListener('keydown', testMove);
 // document.body.style.cursor = 'none';
