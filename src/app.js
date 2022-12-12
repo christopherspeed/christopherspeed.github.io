@@ -12,7 +12,7 @@ import { SeedScene } from 'scenes';
 
 import { InputControl } from './components/input';
 import { SceneCustom, TestScene } from './components/scenes';
-import { World, Vec3, Body, Sphere, Plane, Box } from 'cannon-es'
+import { World, Vec3, Body, Sphere, Plane, Box, Material } from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger';
 
 
@@ -21,7 +21,7 @@ import CannonDebugger from 'cannon-es-debugger';
 const scene = new SceneCustom();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
-const inputControl = new InputControl(camera, scene);
+
 
 
 
@@ -44,19 +44,19 @@ document.body.style.margin = 0; // Removes margin around page
 document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
-/* Ew Orbit controls trash
+//Ew Orbit controls trash
 // Set up controls
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
 controls.minDistance = 4;
 controls.maxDistance = 16;
-controls.update();*/
+controls.update();
 
 // physics
 const world = new World(
     {
-        gravity: new Vec3(0, -9.82 * 0 , 0),
+        gravity: new Vec3(0, -9.82 , 0),
     }
 )
 
@@ -67,17 +67,22 @@ const sphereBody = new Body({
     mass: 5,
     shape: new Sphere(radius),
     angularDamping: 0.4,
+    
 })
 sphereBody.position.set(0, 5, 0)
 const boxBody = new Body({
     shape: new Box(new Vec3(.5, .5, 1)),
     mass: 100,
-    linearDamping: 0.4,
-    angularDamping: 0.4,
+    linearDamping: 0.8,
+    angularDamping: 0.8,
+    material: new Material({
+        friction: 0
+    })
 })
 boxBody.position.set(0, 1.5, 0)
-world.addBody(sphereBody);
-world.addBody(boxBody)
+
+
+const inputControl = new InputControl(camera, scene, boxBody);
 console.log(boxBody.position)
 
 const geometry = new SphereGeometry(radius)
@@ -89,20 +94,35 @@ scene.add(boxMesh, sphereMesh)
 const groundBody = new Body({
     type: Body.STATIC,
     shape: new Plane(),
+    material: new Material({
+        friction: 0
+    })
   })
 groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0) // make it face up
 world.addBody(groundBody)
+const angledGroundBody = new Body({
+    type: Body.STATIC,
+    shape: new Plane(),
+    material: new Material({
+        friction: 0
+    })
+  })
+angledGroundBody.quaternion.setFromEuler(-3 * Math.PI / 4, 0, 0) 
+angledGroundBody.position.set(0, 0, 10)
+world.addBody(angledGroundBody)
+// world.addBody(sphereBody);
+world.addBody(boxBody)
 
-window.addEventListener('keydown', testMove);
+//window.addEventListener('keydown', testMove);
 // document.body.style.cursor = 'none';
 // Render loop
 const onAnimationFrameHandler = (timeStamp) => {
 
-    //controls.update();
+    controls.update();
     inputControl.update();
     // camera.lookAt(scene.target.position);
     world.fixedStep();
-    // cannonDebugger.update();
+    cannonDebugger.update();
     
     
     sphereMesh.position.copy(sphereBody.position)

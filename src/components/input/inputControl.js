@@ -1,9 +1,10 @@
 import { Vector3, Quaternion } from "three";
+import { Body, Vec3 } from "cannon-es"
 
 class InputControl {
     // IMPORTANT: Input arguments can be updated. Just pass in what ever 
     // you want to modify for any input and set it to a var as below!
-    constructor(camera, scene){
+    constructor(camera, scene, playerObj){
         this.state = {
             // Put states in here
             gui: 0
@@ -28,6 +29,8 @@ class InputControl {
 
         // Small distance to snap camera to position (instead of lerp)
         this.snap = 1e-7;
+
+        this.subject = playerObj;
 
 
         // 0 = not being pressed
@@ -71,14 +74,18 @@ class InputControl {
             // Do action if key is pressed
             switch(ele){
                 case 'w':
-                    this.targetLocal.add(new Vector3(0,0,-this.camSpeed));
+                    // this.targetLocal.add(new Vector3(0,0,-this.camSpeed));
+                    this.subject.applyLocalImpulse(new Vec3(0, 0, 5))
                     break;
                 case 's':
-                    this.targetLocal.add(new Vector3(0,0,this.camSpeed));
+                    // this.targetLocal.add(new Vector3(0,0,this.camSpeed));
+                    this.subject.applyLocalImpulse(new Vec3(0, 0, -5))
                     break;
                 case 'a':
+                    this.subject.applyTorque(new Vec3(0, 20, 0));
                     break;
                 case 'd':
+                    this.subject.applyTorque(new Vec3(0, -20, 0));
                     break;
                 case 'arrowup':
                     break;
