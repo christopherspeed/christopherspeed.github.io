@@ -31,7 +31,7 @@ class CarInterior extends Group {
 
         // car radio
         const boxGeo = new BoxGeometry(1, 1, 1);
-        const radioTexture = new TextureLoader().load('assets/textures/radio.jpg');
+        const radioTexture = new TextureLoader().load('favicon.ico');
         const radioMat = new MeshStandardMaterial({map: radioTexture});
         const cube = new Mesh(boxGeo, radioMat);
         cube.rotateX(1.1);
