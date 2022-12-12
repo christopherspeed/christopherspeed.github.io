@@ -45,7 +45,8 @@ class InputControl {
             arrowup: 0,
             arrowdown: 0,
             arrowleft: 0,
-            arrowright: 0
+            arrowright: 0,
+            shift: 0,
         }
 
         // Prevent right menu bring up for us poor mac users.
@@ -95,6 +96,9 @@ class InputControl {
                     break;
                 case 'arrowleft':
                     break;
+                case 'shift':
+                    this.subject.applyLocalImpulse(new Vec3(0, 0, 5))
+                    break
                 default:
                     return;
             }
