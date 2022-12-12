@@ -15,7 +15,7 @@ class SceneCustom extends Scene {
         const box_toon_mat = new MeshToonMaterial()
         box_toon_mat.color = new Color(0x11bd9a);
         const ground_toon_mat = new MeshBasicMaterial()
-        ground_toon_mat.color = new Color(0x575957)
+        ground_toon_mat.color = new Color(0x00994F)
 
         const box_geo = new BoxGeometry(1, 1, 2);
         const box = new Mesh(box_geo, box_toon_mat);
@@ -25,7 +25,7 @@ class SceneCustom extends Scene {
         const box3 = box.clone();
         box3.position.add(new Vector3(0, -0.5, -1))
 
-        const ground_geo = new PlaneGeometry(10, 100);
+        const ground_geo = new PlaneGeometry(100, 100);
         const ground = new Mesh(ground_geo, ground_toon_mat);
         // ground.rotateY(Math.PI)
         // ground.rotateX(3 * Math.PI / 2)

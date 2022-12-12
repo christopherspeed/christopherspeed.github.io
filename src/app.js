@@ -12,7 +12,7 @@ import { SeedScene } from 'scenes';
 
 import { InputControl } from './components/input';
 import { SceneCustom, TestScene } from './components/scenes';
-import { World, Vec3, Body, Sphere, Plane, Box, Material } from 'cannon-es'
+import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder } from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger';
 
 
@@ -32,7 +32,7 @@ const renderer = new WebGLRenderer({ antialias: true });
 // // scene.add( box )
 
 // Set up camera
-camera.position.set(0, 3, -10);
+camera.position.set(0, 30, -100);
 camera.lookAt(new Vector3(0, 0, 0));
 
 
@@ -50,7 +50,7 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
 controls.minDistance = 4;
-controls.maxDistance = 16;
+controls.maxDistance = 100;
 controls.update();
 
 // physics
@@ -107,12 +107,55 @@ const angledGroundBody = new Body({
         friction: 0
     })
   })
-angledGroundBody.quaternion.setFromEuler(-3 * Math.PI / 4, 0, 0) 
-angledGroundBody.position.set(0, 0, 10)
+angledGroundBody.quaternion.setFromEuler(Math.PI, 0, 0) 
+angledGroundBody.position.set(0, 0, 50)
+// second boundary
+const angledGroundBody2 = new Body({
+    type: Body.STATIC,
+    shape: new Plane(),
+    material: new Material({
+        friction: 0
+    })
+  })
+angledGroundBody2.quaternion.setFromEuler(-  2 * Math.PI  , 0, 0) 
+angledGroundBody2.position.set(0, 0, -50)
+// third boundary
+const angledGroundBody3 = new Body({
+    type: Body.STATIC,
+    shape: new Plane(),
+    material: new Material({
+        friction: 0
+    })
+  })
+angledGroundBody3.quaternion.setFromEuler(0, - Math.PI / 2, 0) 
+angledGroundBody3.position.set(50, 0, 0)
+// fourth boundary
+const angledGroundBody4 = new Body({
+    type: Body.STATIC,
+    shape: new Plane(),
+    material: new Material({
+        friction: 0
+    })
+  })
+angledGroundBody4.quaternion.setFromEuler(0, Math.PI / 2, 0) 
+angledGroundBody4.position.set(-50, 0, 0)
 world.addBody(angledGroundBody)
+world.addBody(angledGroundBody2)
+world.addBody(angledGroundBody3)
+world.addBody(angledGroundBody4)
 // world.addBody(sphereBody);
 world.addBody(boxBody)
 
+const bump = new Body({
+    type: Body.STATIC,
+    shape: new Box(new Vec3(1, 5, 5)),
+    material: new Material({
+        friction: 0
+    })
+})
+bump.position.set(0, -0.5, 15)
+bump.quaternion.setFromEuler(- Math.PI / 6, 0, Math.PI / 2)
+world.addBody(bump)
 //window.addEventListener('keydown', testMove);
 // document.body.style.cursor = 'none';
 // Render loop
@@ -148,36 +191,12 @@ window.addEventListener('resize', windowResizeHandler, false);
 window.addEventListener('keyup', (event) => {
     if (event.key == 'p') {
         console.log('hello')
-        sphereBody.applyImpulse(new Vec3(0, 10, 0))
+        box.applyImpulse(new Vec3(0, 10, 0))
     }
 })
 
 
 // window.addEventListener('mousemove', testMouseStuff);
-
-// currently scuffed. The camera looks at the player box, but it's weird
-function testMove(event){
-    const deltaMove = 0.5;
-    switch (event.key){
-        case 'w':
-            //scene.target.translateZ(deltaMove)
-            boxBody.applyLocalImpulse(new Vec3(0, 0, 5))
-            break;
-        case 's':
-            //scene.target.translateZ(-deltaMove)
-            boxBody.applyLocalImpulse(new Vec3(0, 0, -5))
-            break;
-        case 'a':
-            //scene.target.translateX(deltaMove)
-            boxBody.applyTorque(new Vec3(0, 20, 0));
-            break;
-        case 'd':
-            //scene.target.translateX(-deltaMove)
-            boxBody.applyTorque(new Vec3(0, -20, 0));
-            break;
-    }
-
-}
 
 function testMouseStuff(event){
     console.log(event.movementX, event.movementY)
