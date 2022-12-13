@@ -61,7 +61,7 @@ const sphereBody = new Body({
     
 })
 sphereBody.position.set(2, 5, 20)
-world.addBody(sphereBody)
+
 const boxBody = new Body({
     shape: new Box(new Vec3(.5, .5, 1)),
     mass: 100,
@@ -168,9 +168,30 @@ const testBody = new Body({
 })
 testBody.position.set(0, 5, -20)
 world.addBody(testBody)
+
+
+// testing the trigger
+const triggerBody = new Body({
+    isTrigger: true,
+    type: Body.STATIC,
+    position: new Vec3(0, 11, -10),
+    shape: new Box(new Vec3(4, 1, 2),)
+})
+
+function printTrigger(event){
+    console.log(event)
+    console.log(triggerBody.world)
+    bodiesToRemove.push(triggerBody)
+    world.addBody(sphereBody)
+    triggerBody.removeEventListener("collide", printTrigger)
+}
+triggerBody.addEventListener("collide", printTrigger)
+const bodiesToRemove = []
+world.addBody(triggerBody)
 //window.addEventListener('keydown', testMove);
 // document.body.style.cursor = 'none';
 // Render loop
+let bodyToRemove = 0
 const onAnimationFrameHandler = (timeStamp) => {
 
     controls.update();
@@ -178,7 +199,10 @@ const onAnimationFrameHandler = (timeStamp) => {
     // camera.lookAt(scene.target.position);
     world.fixedStep();
     cannonDebugger.update();
-    
+    if (bodiesToRemove.length > 0){
+        world.removeBody(bodiesToRemove[0])
+    }
+    // move all physics things and move their three visualizations along with them
     
     sphereMesh.position.copy(sphereBody.position)
     sphereMesh.quaternion.copy(sphereBody.quaternion)
