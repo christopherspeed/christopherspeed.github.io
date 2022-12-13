@@ -3,6 +3,7 @@ import { BoxGeometry, SphereGeometry, PlaneGeometry, Mesh, MeshToonMaterial} fro
 import { BasicLights } from 'lights'
 import { Car } from '../objects/Car';
 import { Tree } from '../objects/Tree'
+import { randFloat } from 'three/src/math/MathUtils';
 
 
 class SceneCustom extends Scene {
@@ -63,8 +64,18 @@ class SceneCustom extends Scene {
             this.add(right_trees[i]);
         }
 
-        // sides
-        
+        // more trees
+        const moreTrees = []
+
+        for (let i = 0; i < 100; i++){
+            moreTrees.push(new Tree());
+        }
+
+        for (let i = 0; i < moreTrees.length; i++){
+            moreTrees[i].position.add(new Vector3(randFloat(-40, 40), 0, randFloat(-40, 40)));
+            this.add(moreTrees[i])
+        }
+
         
         this.target = thing;
         

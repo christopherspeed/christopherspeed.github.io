@@ -71,7 +71,7 @@ const boxBody = new Body({
         friction: 0
     })
 })
-boxBody.position.set(0, 1.5, 0)
+boxBody.position.set(0, 15.5, -20)
 
 
 const inputControl = new InputControl(camera, scene, boxBody);
@@ -158,6 +158,16 @@ bump2.position.set(0, -0.5, 30)
 bump2.quaternion.setFromEuler(Math.PI / 6, 0, Math.PI / 2)
 world.addBody(bump2)
 world.addBody(bump)
+
+const testBody = new Body({
+    type: Body.STATIC,
+    shape: new Cylinder(10, 20, 10, 20),
+    material: new Material({
+        friction: 0
+    })
+})
+testBody.position.set(0, 5, -20)
+world.addBody(testBody)
 //window.addEventListener('keydown', testMove);
 // document.body.style.cursor = 'none';
 // Render loop
