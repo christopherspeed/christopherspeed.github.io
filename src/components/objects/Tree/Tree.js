@@ -1,11 +1,15 @@
-import {Group, Color, MeshToonMaterial} from 'three'
+import {Group, Color, MeshToonMaterial, Texture} from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import MODEL from './tree.gltf';
+const pineURL = require("pine.jpg").defaut;
 
 class Tree extends Group {
     constructor(color){
         // Call parent Group() constructor
         super()
+        
+        // Load texture
+        const texture = new
 
         // Load object
         const loader = new GLTFLoader();
