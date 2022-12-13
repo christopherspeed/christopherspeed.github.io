@@ -11,13 +11,17 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SeedScene } from 'scenes';
 
 // Initialize core ThreeJS components
-const scene = new SeedScene();
+
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
 // Set up camera
-camera.position.set(6, 3, -10);
+camera.position.set(6, 3, 10);
 camera.lookAt(new Vector3(0, 0, 0));
+
+let direction = new Vector3().subVectors(new Vector3(0, 0, 0), camera.position);
+
+const scene = new SeedScene(direction);
 
 // Set up renderer, canvas, and minor CSS adjustments
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -28,18 +32,18 @@ document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
 // Set up controls
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-controls.enablePan = false;
-controls.minDistance = 4;
-controls.maxDistance = 16;
-controls.update();
+// const controls = new OrbitControls(camera, canvas);
+// controls.enableDamping = true;
+// controls.enablePan = false;
+// controls.minDistance = 4;
+// controls.maxDistance = 16;
+// controls.update();
 
 // Render loop
 const onAnimationFrameHandler = (timeStamp) => {
-    controls.update();
+    // controls.update();
     renderer.render(scene, camera);
-    scene.update && scene.update(timeStamp);
+    scene.update && scene.update(timeStamp, camera.quaternion);
     window.requestAnimationFrame(onAnimationFrameHandler);
 };
 window.requestAnimationFrame(onAnimationFrameHandler);
@@ -52,4 +56,31 @@ const windowResizeHandler = () => {
     camera.updateProjectionMatrix();
 };
 windowResizeHandler();
+
+const keypressHandler = (event, timeStamp) => {
+    const lookAtVector = new Vector3();
+    camera.getWorldDirection(lookAtVector);
+    if (event.key == "w") {
+        camera.position.z += 1;
+    }
+    else if (event.key == "s") {
+        camera.position.z -= 1;
+    }
+    else if (event.key == "a") {
+        camera.position.x += 1;
+    }
+    else if (event.key == "d") {
+        camera.position.x -= 1;
+    }
+    else if (event.key == "i") {
+        //debugger;
+        camera.position.add(lookAtVector);
+        //debugger;
+    }
+    scene.update(timeStamp, camera.quaternion);
+    window.requestAnimationFrame(onAnimationFrameHandler);
+};
+
 window.addEventListener('resize', windowResizeHandler, false);
+window.addEventListener("keydown", keypressHandler, false);
+window.requestAnimationFrame(onAnimationFrameHandler);
