@@ -22,7 +22,7 @@ class GameScene extends Scene {
             })
         )
         ground.lookAt(new Vector3(0, 1, 0));
-        this.add(ground)
+        // this.add(ground)
 
         // mountain
         const mountain = new Mesh(

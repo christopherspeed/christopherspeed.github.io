@@ -73,7 +73,7 @@ const boxBody = new Body({
     }),
     fixedRotation: true
 })
-boxBody.position.set(0, 15.5, -20)
+boxBody.position.set(20, 120, -140)
 
 const inputControl = new InputControl(camera, scene, boxBody);
 console.log(boxBody.position)
@@ -93,7 +93,7 @@ const groundBody = new Body({
     })
 })
 groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0) // make it face up
-world.addBody(groundBody)
+// world.addBody(groundBody)
 const angledGroundBody = new Body({
     type: Body.STATIC,
     shape: new Plane(),
@@ -133,10 +133,10 @@ const angledGroundBody4 = new Body({
 })
 angledGroundBody4.quaternion.setFromEuler(0, Math.PI / 2, 0)
 angledGroundBody4.position.set(-50, 0, 0)
-world.addBody(angledGroundBody)
-world.addBody(angledGroundBody2)
-world.addBody(angledGroundBody3)
-world.addBody(angledGroundBody4)
+// world.addBody(angledGroundBody)
+// world.addBody(angledGroundBody2)
+// world.addBody(angledGroundBody3)
+// world.addBody(angledGroundBody4)
 // world.addBody(sphereBody);
 world.addBody(boxBody)
 
@@ -199,7 +199,7 @@ let boxRay = new Ray(boxBody.position, boxBody.position.vadd(new Vec3(0, -1, 0))
 
 
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import MODEL from './test_road.gltf'
+import MODEL from './test_environment.gltf'
 const loader = new GLTFLoader()
 loader.load(MODEL, (gltf) => {
     console.log(gltf)
@@ -241,7 +241,7 @@ loader.load(MODEL, (gltf) => {
 
     
     world.addBody(triBody)
-    world.addBody(triBody2)
+    // world.addBody(triBody2)
     // world.addBody(convexBody);
     const ramp = new Mesh(gltf.scene.children[0].geometry, new MeshBasicMaterial({
         side: DoubleSide
@@ -250,9 +250,9 @@ loader.load(MODEL, (gltf) => {
         side: DoubleSide
     }))
     ramp.rotateY(Math.PI)
-    ramp2.rotateY(Math.PI + .2);
-    ramp2.position.add(new Vector3(3, 2, 15))
-    scene.add(ramp, ramp2)
+    // ramp2.rotateY(Math.PI + .2);
+    // ramp2.position.add(new Vector3(3, 2, 15))
+    scene.add(ramp)
 });
 
 
