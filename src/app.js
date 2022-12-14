@@ -11,7 +11,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SeedScene } from 'scenes';
 
 import { InputControl } from './components/input';
-import { SceneCustom, TestScene } from './components/scenes';
+import { FrustumCulling, SceneCustom, TestScene } from './components/scenes';
 import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder } from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger';
 
@@ -21,6 +21,7 @@ import CannonDebugger from 'cannon-es-debugger';
 const scene = new SceneCustom();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
+const frustCull = new FrustumCulling(scene, camera);
 
 // Set up camera
 camera.position.set(0, 30, -100);
@@ -197,7 +198,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     controls.update();
     inputControl.update();
     // camera.lookAt(scene.target.position);
-    world.fixedStep();
+    world.fixedStep(1/60, 10);
     cannonDebugger.update();
     if (bodiesToRemove.length > 0){
         world.removeBody(bodiesToRemove[0])
@@ -208,7 +209,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     sphereMesh.quaternion.copy(sphereBody.quaternion)
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
-
+    frustCull.update();
     renderer.render(scene, camera);
     scene.update && scene.update(timeStamp);
     window.requestAnimationFrame(onAnimationFrameHandler);
