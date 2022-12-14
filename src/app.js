@@ -6,12 +6,14 @@
  * handles window resizes.
  *
  */
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry} from 'three';
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, Color} from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { SeedScene } from 'scenes';
+import { FogExp2 } from 'three/src/scenes/FogExp2.js'
+// import { SeedScene } from 'scenes';
+import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls.js';
 
 import { InputControl } from './components/input';
-import { SceneCustom, TestScene } from './components/scenes';
+import { SceneCustom, TestScene} from './components/scenes';
 import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder } from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger';
 
@@ -35,8 +37,15 @@ document.body.style.margin = 0; // Removes margin around page
 document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
-//Ew Orbit controls trash
+scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+
 // Set up controls
+// ????
+// const controls = new FirstPersonControls( camera, canvas );
+// controls.movementSpeed = 150;
+// controls.lookSpeed = 0.01;
+
+// Ew Orbit controls trash
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
