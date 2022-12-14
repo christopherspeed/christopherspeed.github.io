@@ -6,7 +6,7 @@
  * handles window resizes.
  *
  */
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry} from 'three';
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, OrthographicCamera, WebGLRenderTarget, MeshBasicMaterial } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SeedScene } from 'scenes';
 
@@ -23,9 +23,23 @@ const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
 // Set up camera
-camera.position.set(0, 30, -100);
+camera.position.set(0, 300, -100);
 camera.lookAt(new Vector3(0, 0, 0));
 
+// set up overhead camera
+const overheadCamera = new OrthographicCamera();
+overheadCamera.position.set(0, 10, 0);
+overheadCamera.lookAt(new Vector3(0, 0, 0));
+var newBufferTexture = new WebGLRenderTarget(100, 100);
+var oldBufferTexture = newBufferTexture;
+var boxMaterial = new MeshBasicMaterial({map:oldBufferTexture.texture});
+var boxGeometry2 = new BoxGeometry( 10, 10, 10 );
+var mainBoxObject = new Mesh(boxGeometry2,boxMaterial);
+ 
+// Move it back so we can see it
+mainBoxObject.position.y = 30;
+// Add it to the main scene
+scene.add(mainBoxObject);
 
 // Set up renderer, canvas, and minor CSS adjustments
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -209,9 +223,30 @@ const onAnimationFrameHandler = (timeStamp) => {
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
 
+    var newPos = new Vector3(0.0001,0,0).add(overheadCamera.position);
+    
+    
+    renderer.setRenderTarget(newBufferTexture);
+    renderer.render(scene, overheadCamera);
+    if(scene[123]!=undefined){
+        scene[123].visible = false;
+    }
+    renderer.setRenderTarget(null);
+    //overheadCamera.position.set(newPos);
+    //renderer.clear();
+    
     renderer.render(scene, camera);
+    if(scene[123]!=undefined){
+        scene[123].visible = true;
+    }
+    oldBufferTexture = newBufferTexture;
+
+    
     scene.update && scene.update(timeStamp);
     window.requestAnimationFrame(onAnimationFrameHandler);
+
+    // do texture stuff
+    
 };
 window.requestAnimationFrame(onAnimationFrameHandler);
 
