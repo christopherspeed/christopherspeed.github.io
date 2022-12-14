@@ -6,7 +6,7 @@
  * handles window resizes.
  *
  */
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, Color} from 'three';
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Group, Mesh, BoxGeometry, Color, PlaneGeometry, TextureLoader, sRGBEncoding, MeshLambertMaterial} from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { FogExp2 } from 'three/src/scenes/FogExp2.js'
 // import { SeedScene } from 'scenes';
@@ -38,6 +38,43 @@ document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
 scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+
+// SMOKE TEXTURE
+// adapted from: https://www.youtube.com/watch?v=otavCmIuEhY
+const smokeTextureLocation = require("./components/textures/Smoke15Frames.png").default;
+const smokeTexture = new TextureLoader().load(smokeTextureLocation);
+smokeTexture.encoding = sRGBEncoding; // default is linear
+const smokeGeometry = new PlaneGeometry(100, 100);
+
+// LambertMaterial for nonshiny surfaces
+const smokeMaterial = new MeshLambertMaterial( {
+    color: 0xffffff, // white for debugging
+    map: smokeTexture,
+    emissive: 0x222222,
+    opacity: .15,
+    transparent: true
+});
+
+const smoke = new Group();
+
+for (let i = 0; i < 20; i++) {
+    // can tweak i for more or less layers
+    let smokeElement = new Mesh(smokeGeometry, smokeMaterial);
+    smokeElement.scale.set(2,2,2);
+
+    // position textures at random xy positions
+    smokeElement.position.set(Math.random() * 200 - 50, Math.random() * 200 - 50, -20);
+    // probably have to adjust z
+
+    // set smoke texture rotations to random amounts on z axis
+    smokeElement.rotateOnAxis.z = Math.random * 360;
+    smoke.add(smokeElement);
+
+    console.log(smokeElement.visible);
+
+}
+scene.add(smoke);
+
 
 // Set up controls
 // ????
@@ -175,7 +212,7 @@ const testBody = new Body({
         friction: 0
     })
 })
-testBody.position.set(0, 5, -20)
+testBody.position.set(0, 5, -30)
 world.addBody(testBody)
 //window.addEventListener('keydown', testMove);
 // document.body.style.cursor = 'none';
@@ -187,6 +224,8 @@ const onAnimationFrameHandler = (timeStamp) => {
     // camera.lookAt(scene.target.position);
     world.fixedStep();
     cannonDebugger.update();
+    smoke.rotation.z += 1;
+    smoke.position.z += 1;
     
     
     sphereMesh.position.copy(sphereBody.position)
