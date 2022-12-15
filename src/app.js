@@ -9,8 +9,6 @@
  */
 
 
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
-
 import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SeedScene } from 'scenes';
@@ -239,9 +237,9 @@ const onAnimationFrameHandler = (timeStamp) => {
     // particleSystem.position.y += 0.1;
     updateParticleSystem(particleSystem);
 
-    if (bodiesToRemove.length > 0) {
-        world.removeBody(bodiesToRemove[0])
-    }
+    // if (bodiesToRemove.length > 0) {
+    //     world.removeBody(bodiesToRemove[0])
+    // }
 
     // move all physics things and move their three visualizations along with them
     boxMesh.position.copy(boxBody.position)
