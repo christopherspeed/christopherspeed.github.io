@@ -4,16 +4,23 @@ import { Body, Vec3 } from "cannon-es"
 class InputControl {
     // IMPORTANT: Input arguments can be updated. Just pass in what ever 
     // you want to modify for any input and set it to a var as below!
-    constructor(camera, scene, playerObj, playerMesh, audio){
+    constructor(camera, scene, playerObj, playerMesh, audio, hud){
         this.state = {
             // Put states in here
             gui: 0
         }
 
+        //HUD stuff
+        this.w = false;
+        this.a = false;
+        this.s = false;
+        this.d = false;
+
         // Be able to interact with camera and scene
         this.camera = camera;
         this.scene = scene;
         this.audio = audio;
+        this.hud = hud;
 
         // Currently Not Used
         this.rotateAngleLR = 0; // Left right angle
@@ -70,7 +77,7 @@ class InputControl {
             
             //this.camera.position.copy(this.subjectMesh.position);
             //lerpTowardTarget.bind(this)();
-
+            hud.update(this.w, this.a, this.s, this.d)
         }
 
         this.clamp = function(scalar, min, max){
@@ -96,15 +103,19 @@ class InputControl {
                     // this.targetLocal.add(new Vector3(0,0,-this.camSpeed));
                     v.applyWheelForce(p.maxForce, 2)
                     v.applyWheelForce(-p.maxForce, 3)
+                    
                     break;
                 case 's':
                     // this.targetLocal.add(new Vector3(0,0,this.camSpeed));
                     v.applyWheelForce(-p.maxForce / 2, 2)
                     v.applyWheelForce(p.maxForce / 2, 3)
+           
                     break;
                 case 'a':
+                 
                     break;
                 case 'd':
+                    
                     break;
                 case 'arrowup':
                     break;
@@ -119,6 +130,7 @@ class InputControl {
                 default:
                     return;
             }
+
         }
 
         function mouseMove(ele){
@@ -178,19 +190,23 @@ class InputControl {
             switch(key){
                 case 'w':
                     if(this.keyMap['s'] == 1) this.keyMap['s'] = 0.5;
+                    this.w = true;
                     break;
                 case 's':
                     if(this.keyMap['w'] == 1) this.keyMap['w'] = 0.5;
+                    this.s = true;
                     break;
                 case 'a':
                     if(this.keyMap['d'] == 1) this.keyMap['d'] = 0.5;
                     this.subject.vehicle.setSteeringValue(this.subject.param.maxSteerVal, 0)
                     this.subject.vehicle.setSteeringValue(this.subject.param.maxSteerVal, 1)
+                    this.a = true;
                     break;
                 case 'd':
                     if(this.keyMap['a'] == 1) this.keyMap['a'] = 0.5;
                     this.subject.vehicle.setSteeringValue(-this.subject.param.maxSteerVal, 0)
                     this.subject.vehicle.setSteeringValue(-this.subject.param.maxSteerVal, 1)
+                    this.d = true;
                     break;
                 case 'arrowup':
                     if(this.keyMap['arrowdown'] == 1) this.keyMap['arrowdown'] = 0.5;
@@ -230,19 +246,23 @@ class InputControl {
             switch(key){
                 case 'w':
                     if(this.keyMap['s'] == 0.5) this.keyMap['s'] = 1;
+                    this.w = false;
                     break;
                 case 's':
                     if(this.keyMap['w'] == 0.5) this.keyMap['w'] = 1;
+                    this.s = false;
                     break;
                 case 'a':
                     if(this.keyMap['d'] == 0.5) this.keyMap['d'] = 1;
                     this.subject.vehicle.setSteeringValue(0, 0)
                     this.subject.vehicle.setSteeringValue(0, 1)
+                    this.a = false;
                     break;
                 case 'd':
                     if(this.keyMap['a'] == 0.5) this.keyMap['a'] = 1;
                     this.subject.vehicle.setSteeringValue(0, 0)
                     this.subject.vehicle.setSteeringValue(0, 1)
+                    this.d = false;
                     break;
                 case 'arrowup':
                     if(this.keyMap['arrowdown'] == 0.5) this.keyMap['arrowdown'] = 1;
