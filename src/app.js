@@ -195,7 +195,7 @@ const world = new World(
 )
 
 
-const player = new PlayerVehicle(world, [3.1, 20, 90]);
+const player = new PlayerVehicle(world, [3.1,16, 90]);
 
 /*
 const boxBody = new Body({
@@ -210,7 +210,7 @@ const boxBody = new Body({
 
 })*/
 const boxBody = player.chassis;
-
+boxBody.quaternion.setFromEuler(-Math.PI/2, Math.PI/2, 0);
 console.log(boxBody.position)
 
 
@@ -399,6 +399,7 @@ window.addEventListener('keydown', (event) => {
         console.log(sceneR);
         sceneR = scene;
         console.log(sceneR);
+        
         controls = new OrbitControls(camera, canvas);
         controls.enableDamping = true;
         controls.enablePan = false;
