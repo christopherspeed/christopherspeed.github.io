@@ -12,7 +12,7 @@ import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMa
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 import { SeedScene } from 'scenes';
-
+import { HUD } from './components/objects/HUD';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 import { MakeAudio } from './components/audio';
@@ -25,7 +25,7 @@ import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh
 import CannonDebugger from 'cannon-es-debugger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Road from './components/objects/Road/Road';
-import {Menu} from './components/objects/Menu';
+import { Menu } from './components/objects/Menu';
 
 
 // load in shaders
@@ -45,6 +45,11 @@ const scene = new GameScene();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
+const hud = new HUD();
+const hudCamera = new PerspectiveCamera();
+
+hudCamera.position.set(0,20,0);
+hudCamera.lookAt(new Vector3(0,0,0));
 
 let miniMap = false;
 let inMenu = true;
@@ -214,7 +219,7 @@ const box_geo = new BoxGeometry(1, 1, 2);
 const boxMesh = new Mesh(box_geo, material);
 
 // scene.add(boxMesh, sphereMesh)
-const inputControl = new InputControl(camera, scene, player, boxMesh, sound);
+const inputControl = new InputControl(camera, scene, player, boxMesh, sound, hud);
 
 scene.add(boxMesh)
 // testing the trigger
@@ -319,7 +324,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     } else {
         renderer.render(sceneR, menuCamera);
     }
-
+    
 
     if(miniMap){    
         renderer.setClearColor( 0x333333 );
@@ -335,6 +340,24 @@ const onAnimationFrameHandler = (timeStamp) => {
         renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
     
         renderer.render( sceneR, overheadCamera );
+        
+        renderer.setScissorTest( false );
+    }
+
+    if(miniMap){    
+        renderer.setClearColor( 0x333333 );
+        
+        renderer.clearDepth();
+        
+        renderer.setScissorTest( true );
+        const VIEW_X = 16;
+        const VIEW_Y = 300;
+        const VIEW_WIDTH = window.innerHeight / 4;
+        const VIEW_HEIGHT = window.innerHeight / 4;
+        renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
+        renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
+    
+        renderer.render( hud, menuCamera );
         
         renderer.setScissorTest( false );
     }
@@ -387,6 +410,7 @@ window.addEventListener('keydown', (event) => {
         miniMap = true;
         inMenu = false;
     }
+
 })
 
 
