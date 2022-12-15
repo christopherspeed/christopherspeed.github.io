@@ -8,7 +8,6 @@
  * It loads all of the meshes and collision bodies.
  */
 
-
 import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, OrthographicCamera, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2, MeshToonMaterial } from 'three';
 
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -28,16 +27,23 @@ import CannonDebugger from 'cannon-es-debugger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Road from './components/objects/Road/Road';
 
+
 import { Tree } from './components/objects/Tree';
 import { Menu } from './components/objects/Menu';
 import { MaterialLoader } from 'three';
 
 
-// load in shaders
-const vertexShaderText   = require("./components/shaders/vertexShader.vert").default;
-const fragmentShaderText = require("./components/shaders/fragmentShader.frag").default;
-console.log(vertexShaderText);
-console.log(fragmentShaderText);
+import {GameOver} from './components/objects/GameOver';
+
+
+
+import { Tree } from './components/objects/Tree';
+
+// // load in shaders
+// const vertexShaderText   = require("./components/shaders/vertexShader.vert").default;
+// const fragmentShaderText = require("./components/shaders/fragmentShader.frag").default;
+// console.log(vertexShaderText);
+// console.log(fragmentShaderText);
 
 
 // Initialize core ThreeJS components
@@ -87,6 +93,9 @@ const menuCamera = new OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
 const menu = new Menu(2, 2, menuCamera.quaternion);
 camera.zoom = 0.4;
 camera.updateProjectionMatrix();
+// game over scene
+const gameover = new GameOver(window.innerWidth, window.innerHeight, camera.quaternion);
+let gamestart = false;
 
 // Set up renderer, canvas, and minor CSS adjustments
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -97,19 +106,14 @@ document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
 
-
-
-scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
-
-// scene.fog = new FogExp2(new Color(0x1b2e4d), .006);
-
+scene.fog = new FogExp2(new Color(0x1b2e4d), .002);
 
 const smokeParticleLocation = require("./components/textures/particlesmoke.png").default;
 const smokeParticleTexture = new TextureLoader().load(smokeParticleLocation);
-console.log(smokeParticleTexture);
 
 
-const particleCount = 1000;
+
+const particleCount = 10000;
 
 const particleSystem = createParticleSystem(particleCount);
 scene.add(particleSystem);
@@ -121,65 +125,47 @@ for (let i = 0; i < particleCount; i++) {
 }
 
 
-// COLLISION TO END GAME
 
-const smokeBody = new Body({
-    isTrigger: true,
-    type: Body.STATIC,
-    position: new Vec3(0, 0, 0),
-    shape: new Box(new Vector3(100, 1, 100))
-})
-
-function printTrigger(event) {
-    console.log(event)
-    console.log(triggerBody.world)
-    //bodiesToRemove.push(triggerBody) ??
-    smokeBody.removeEventListener("collide", printTrigger)
-}
-smokeBody.addEventListener("collide", printTrigger)
-
-
-
-/*
 // NOT PROPERLY IMPLEMENTED YET, NEEDS TO BE UNCOMMENTED/TWEAKED.
 // UNCOMMENT LINES 230-231 WHEN WORKING
 // SMOKE TEXTURE
 // adapted from: https://www.youtube.com/watch?v=otavCmIuEhY
 
-const smokeTextureLocation = require("./components/textures/Smoke15Frames.png").default;
-const smokeTexture = new TextureLoader().load(smokeTextureLocation);
-smokeTexture.encoding = sRGBEncoding; // default is linear
-const smokeGeometry = new PlaneGeometry(100, 100);
+// const smokeTextureLocation = require("./components/textures/Smoke15Frames.png").default;
+// const smokeTexture = new TextureLoader().load(smokeTextureLocation);
+// smokeTexture.encoding = sRGBEncoding; // default is linear
+// const smokeGeometry = new PlaneGeometry(100, 100);
 
-// LambertMaterial for nonshiny surfaces
-const smokeMaterial = new MeshLambertMaterial( {
-    color: 0x0000ff, // white for debugging
-    map: smokeTexture,
-    emissive: 0x222222,
-    opacity: .9,
-    transparent: true
-});
+// // LambertMaterial for nonshiny surfaces
+// const smokeMaterial = new MeshLambertMaterial( {
+//     color: 0x0000ff, // white for debugging
+//     map: smokeTexture,
+//     emissive: 0x222222,
+//     opacity: .9,
+//     transparent: true
+// });
 
-const smoke = new Group();
+// const smoke = new Group();
 
-for (let i = 0; i < 20; i++) {
-    // can tweak i for more or less layers
-    let smokeElement = new Mesh(smokeGeometry, smokeMaterial);
-    smokeElement.scale.set(2,2,2);
+// for (let i = 0; i < 20; i++) {
+//     // can tweak i for more or less layers
+//     let smokeElement = new Mesh(smokeGeometry, smokeMaterial);
+//     smokeElement.scale.set(2,2,2);
 
-    // position textures at random xy positions
-    smokeElement.position.set(Math.random() * 200 - 50, Math.random() * 200 - 50, -20);
-    // probably have to adjust z
+//     // position textures at random xz positions
+//     smokeElement.position.set(Math.random() * 200 - 50, -20, Math.random() * 200 - 50);
+//     // probably have to adjust z
 
-    // set smoke texture rotations to random amounts on z axis
-    smokeElement.rotateOnAxis.z = Math.random * 360;
-    smoke.add(smokeElement);
+//     // set smoke texture rotations to random amounts on y axis
+//     smokeElement.rotateOnAxis.y = Math.random * 2 * Math.PI;
+//     smokeElement.rotateX(3 * Math.PI / 2);
+//     smoke.add(smokeElement);
 
-    console.log(smokeElement.visible);
+//     console.log(smokeElement.visible);
 
-}
-scene.add(smoke);
-*/
+// }
+// scene.add(smoke);
+
 
 // Set up controls
 // ????
@@ -190,7 +176,6 @@ scene.add(smoke);
 // Ew Orbit controls trash
 
 var controls;
-
 
 // physics
 const world = new World(
@@ -327,12 +312,9 @@ const onAnimationFrameHandler = (timeStamp) => {
 
     //cannonDebugger.update();
 
-    // smoke.rotation.z += 1; UNCOMMENT WHEN WE GET SMOKE WORKING
-    // smoke.position.z += 1;
-
     // particleSystem.position.y += 0.1;
     updateParticleSystem(particleSystem);
-    smokeBody.position.copy(particleSystem.position);
+
 
     // if (bodiesToRemove.length > 0) {
     //     world.removeBody(bodiesToRemove[0])
@@ -349,6 +331,13 @@ const onAnimationFrameHandler = (timeStamp) => {
     
     overheadCamera.position.set(boxBody.position.x, boxBody.position.y+200, boxBody.position.z);
     overheadCamera.lookAt(new Vector3(boxBody.position.x, boxBody.position.y+100, boxBody.position.z));
+
+    // GAME OVER!
+    if (boxMesh.position.y <= particleSystem.geometry.attributes.position.array[1] + 5 && gamestart) {
+        renderer.render( gameover, camera );
+        console.log('gameover');
+        gamestart = false;
+    }
 
 
     // renderer.setRenderTarget(null);
@@ -419,7 +408,6 @@ const onAnimationFrameHandler = (timeStamp) => {
     //renderer.render(sceneR, camera);
 
 
-
     scene.update && scene.update(boxBody.position);
 
     window.requestAnimationFrame(onAnimationFrameHandler);
@@ -442,10 +430,8 @@ window.addEventListener('resize', windowResizeHandler, false);
 
 window.addEventListener('keydown', (event) => {
     if (event.key == 'p') {
-        console.log(sceneR);
+        resetParticleSystem(particleSystem);
         sceneR = scene;
-        console.log(sceneR);
-        
         controls = new OrbitControls(camera, canvas);
         controls.enableDamping = true;
         controls.enablePan = false;
@@ -454,8 +440,10 @@ window.addEventListener('keydown', (event) => {
         controls.update();
         camera.zoom = 1;
         camera.updateProjectionMatrix();
+        gamestart = true;
         miniMap = true;
         inMenu = false;
+
     }
 
 })
@@ -482,10 +470,10 @@ function createParticleSystem(particleCount) {
     const verts = [];
    // Create the vertices and add them to the particles geometry
     for (var p = 0; p < particleCount; p++) {
-        // This will create all the vertices in a range of -50 to 50 in xy
-        var x = Math.random() * 100 - 50;
+        // This will create all the vertices in a range of -50 to 50 in x and -20 to 80 in z
+        var x = Math.random() * 500 - 250;
         var y = 0;
-        var z = Math.random() * 100 - 50;
+        var z = Math.random() * 500 - 250;
     
         // Create the vertex
         var particle = new Vector3(x, y, z);
@@ -562,25 +550,33 @@ function updateParticleSystem(particleSystem) {
     let vertices = particleSystem.geometry.attributes.position.array;
     const numVertices = particleSystem.geometry.attributes.position.count;
 
-    const pull = .00001; // tweak as necessary
+    const pull = .000001; // tweak as necessary
     
 
     // updates particle positions based on velocity
     for (let i = 0; i < numVertices; i++) {
         vertices[ i * 3 + 0 ] += particleVelocities[i][0];
-
-        if (Math.abs(vertices[i * 3 + 0]) > 70) {
+        const c = Math.abs(vertices[i * 3 + 0]);
+        if (c > 300) {
             // reverses with slight nudge of randomness
             particleVelocities[i][0] *= -1;
             particleVelocities[i][0] += (Math.random() - .5) / 8;
         }
-        vertices[ i * 3 + 1 ] += .001; // y
+
+
+        vertices[ i * 3 + 1 ] += .01; // y
         vertices[ i * 3 + 2 ] += particleVelocities[i][1];
-        if (Math.abs(vertices[i * 3 + 2]) > 70) {
+        const d = Math.abs(vertices[i * 3 + 2]);
+        if (d > 300) {
             // reverses with slight nudge of randomness
             particleVelocities[i][1] *= -1;
             particleVelocities[i][1] += (Math.random() - .5) / 8;
         }
+        if (c < 20 && d < 20) {
+            vertices[ i * 3 + 0 ] = Math.random() * 500 - 250; //resets x
+            vertices[ i * 3 + 2 ] = Math.random() * 500 - 250; //resets z
+        }
+
     }
     // updates particle velocities through interactions with 
     // random subset of neighbors
@@ -605,6 +601,20 @@ function updateParticleSystem(particleSystem) {
 
 
 
+
+    particleSystem.geometry.attributes.position.needsUpdate = true;
+}
+
+// brings the particle system down to y = 0
+function resetParticleSystem(particleSystem) {
+
+    let vertices = particleSystem.geometry.attributes.position.array;
+    const numVertices = particleSystem.geometry.attributes.position.count;  
+
+    // updates particle positions based on velocity
+    for (let i = 0; i < numVertices; i++) {
+        vertices[ i * 3 + 1 ] = 0; // y
+    }
 
     particleSystem.geometry.attributes.position.needsUpdate = true;
 }
