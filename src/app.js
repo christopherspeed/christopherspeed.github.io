@@ -7,7 +7,7 @@
  *
  */
 
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide } from 'three';
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SeedScene } from 'scenes';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
