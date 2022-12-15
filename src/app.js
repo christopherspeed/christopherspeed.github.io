@@ -36,9 +36,6 @@ import { MaterialLoader } from 'three';
 import {GameOver} from './components/objects/GameOver';
 
 
-
-import { Tree } from './components/objects/Tree';
-
 // // load in shaders
 // const vertexShaderText   = require("./components/shaders/vertexShader.vert").default;
 // const fragmentShaderText = require("./components/shaders/fragmentShader.frag").default;
