@@ -80,6 +80,14 @@ class SceneCustom extends Scene {
         this.target = thing;
         
     }
+
+    update(carPos) {
+        for (let i = 3; i < 123; i++) {
+            const child = this.children[i];
+            this.children[i].update(carPos);
+        }
+
+    }
 }
 
 export default SceneCustom;

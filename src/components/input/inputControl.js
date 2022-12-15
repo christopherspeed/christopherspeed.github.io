@@ -4,7 +4,7 @@ import { Body, Vec3 } from "cannon-es"
 class InputControl {
     // IMPORTANT: Input arguments can be updated. Just pass in what ever 
     // you want to modify for any input and set it to a var as below!
-    constructor(camera, scene, playerObj){
+    constructor(camera, scene, playerObj, playerMesh, audio){
         this.state = {
             // Put states in here
             gui: 0
@@ -13,24 +13,27 @@ class InputControl {
         // Be able to interact with camera and scene
         this.camera = camera;
         this.scene = scene;
-
-        // Locally where is the camera moving towards.
-        this.targetLocal = new Vector3();
+        this.audio = audio;
 
         // Currently Not Used
-        this.rotateLocal = new Quaternion();
-        this.rotateFromEquilibrium = new Quaternion();
+        this.rotateAngleLR = 0; // Left right angle
+        this.rotateAngleUD = 0; // Up down angle
 
-        // Speed of camera per frame of movement
-        this.camSpeed = 0.35;
+        this.currentLookAt = new Vector3();
 
-        // Fraction of step to take towards local position
-        this.lerpSpeed = 0.045;
+        this.rotateVar = {
+            lerpSpeed: 0.045,
+            // Small distance to snap camera to position (instead of lerp)
+            snap: 1e-7,
+            boundLR: 9 * Math.PI / 16,
+            boundUD: Math.PI / 2,
+            scale: 0.005
+        }
+ 
 
-        // Small distance to snap camera to position (instead of lerp)
-        this.snap = 1e-7;
 
         this.subject = playerObj;
+        this.subjectMesh = playerMesh;
 
 
         // 0 = not being pressed
@@ -42,13 +45,14 @@ class InputControl {
             s: 0,
             a: 0,
             d: 0,
+            k: 0,
+            l: 0,
             arrowup: 0,
             arrowdown: 0,
             arrowleft: 0,
             arrowright: 0,
             shift: 0,
         }
-
         // Prevent right menu bring up for us poor mac users.
         addEventListener('contextmenu', (e) => {e.preventDefault();})
         
@@ -63,7 +67,14 @@ class InputControl {
         this.update = function(){
             Object.keys(this.keyMap).forEach(handleKeyUpdate.bind(this));
             // Slowly lerp towards target position
-            lerpTowardTarget.bind(this)();
+            
+            //this.camera.position.copy(this.subjectMesh.position);
+            //lerpTowardTarget.bind(this)();
+
+        }
+
+        this.clamp = function(scalar, min, max){
+            return Math.max(Math.min(scalar, max), min);
         }
     
         // IMPORTANT: Add any functionalities for keypresses here!!!!!
@@ -73,20 +84,37 @@ class InputControl {
             // See if key is pressed down
             if(this.keyMap[ele] != 1) return;
             // Do action if key is pressed
+            const p = this.subject.param;
+            const v = this.subject.vehicle
+
+            /* Vehicle controls from rigid vehicle xample:
+           https://github.com/pmndrs/cannon-es/blob/master/examples/rigid_vehicle.html
+            */
+
             switch(ele){
                 case 'w':
                     // this.targetLocal.add(new Vector3(0,0,-this.camSpeed));
-                    this.subject.applyLocalImpulse(new Vec3(0, 0, 5))
+                    v.applyWheelForce(p.maxForce, 2)
+                    v.applyWheelForce(-p.maxForce, 3)
                     break;
                 case 's':
                     // this.targetLocal.add(new Vector3(0,0,this.camSpeed));
-                    this.subject.applyLocalImpulse(new Vec3(0, 0, -5))
+                    v.applyWheelForce(-p.maxForce / 2, 2)
+                    v.applyWheelForce(p.maxForce / 2, 3)
                     break;
                 case 'a':
-                    this.subject.applyTorque(new Vec3(0, 20, 0));
                     break;
                 case 'd':
-                    this.subject.applyTorque(new Vec3(0, -20, 0));
+                    break;
+                case 'k':
+                    if (this.audio.bg.isPlaying) {
+                        this.audio.bg.pause();
+                    } else {
+                        this.audio.bg.play();
+                    }
+                    break;
+                case 'l':
+                    this.audio.beep.play();
                     break;
                 case 'arrowup':
                     break;
@@ -97,7 +125,6 @@ class InputControl {
                 case 'arrowleft':
                     break;
                 case 'shift':
-                    this.subject.applyLocalImpulse(new Vec3(0, 0, 5))
                     break
                 default:
                     return;
@@ -109,23 +136,33 @@ class InputControl {
             const button = ele.buttons;
             const left = (button & 1 == 1);
             const right = (button & 2 == 2);
-            if(right){
-                
-            }
+            const param = this.rotateVar;
+            this.rotateAngleLR = (0.5 - ele.clientX / window.innerWidth) * param.boundLR
+            this.rotateAngleUD = (0.5 - ele.clientY / window.innerHeight- 0.5)  * param.boundUD
+        }
+
+        function calculateTarget(lrAngle, udAngle){
+            const target1 = new Vector3(Math.sin(lrAngle) , 0, Math.cos(lrAngle));
+            const target2 = new Vector3(0, Math.sin(udAngle), Math.cos(udAngle));
+            return target1.add(target2).divideScalar(2).normalize();
         }
 
         // Slowly lerp towards target local position. 
         function lerpTowardTarget(){
-            const result = new Vector3();
-            if(this.targetLocal.length() < this.snap){
+
+            const target = calculateTarget(this.rotateAngleLR, this.rotateAngleUD);
+            const result = new Vector3().copy(this.currentLookAt);
+            const param = this.rotateVar;
+            
+            if(this.currentLookAt.distanceTo(target) < param.snap){
                 // If close in distance just snap to position
-                result.copy(this.targetLocal);
-                this.targetLocal.multiplyScalar(0);
+                result.copy(this.currentLookAt);
             } else {
-                result.lerp(this.targetLocal, this.lerpSpeed);
-                this.targetLocal.sub(result);
+                result.lerp(target, param.lerpSpeed);
             }
-            this.camera.position.copy(this.camera.localToWorld(result));
+            this.currentLookAt.copy(result);
+            this.camera.lookAt(this.subjectMesh.localToWorld(result));
+            
         }
 
         // Check if typing is in textbox or just outside of scope(?).
@@ -157,9 +194,13 @@ class InputControl {
                     break;
                 case 'a':
                     if(this.keyMap['d'] == 1) this.keyMap['d'] = 0.5;
+                    this.subject.vehicle.setSteeringValue(this.subject.param.maxSteerVal, 0)
+                    this.subject.vehicle.setSteeringValue(this.subject.param.maxSteerVal, 1)
                     break;
                 case 'd':
                     if(this.keyMap['a'] == 1) this.keyMap['a'] = 0.5;
+                    this.subject.vehicle.setSteeringValue(-this.subject.param.maxSteerVal, 0)
+                    this.subject.vehicle.setSteeringValue(-this.subject.param.maxSteerVal, 1)
                     break;
                 case 'arrowup':
                     if(this.keyMap['arrowdown'] == 1) this.keyMap['arrowdown'] = 0.5;
@@ -195,9 +236,13 @@ class InputControl {
                     break;
                 case 'a':
                     if(this.keyMap['d'] == 0.5) this.keyMap['d'] = 1;
+                    this.subject.vehicle.setSteeringValue(0, 0)
+                    this.subject.vehicle.setSteeringValue(0, 1)
                     break;
                 case 'd':
                     if(this.keyMap['a'] == 0.5) this.keyMap['a'] = 1;
+                    this.subject.vehicle.setSteeringValue(0, 0)
+                    this.subject.vehicle.setSteeringValue(0, 1)
                     break;
                 case 'arrowup':
                     if(this.keyMap['arrowdown'] == 0.5) this.keyMap['arrowdown'] = 1;
@@ -214,6 +259,7 @@ class InputControl {
                 default:
                     return;
             }
+            
         }
     }
 

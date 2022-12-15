@@ -1,26 +1,78 @@
-import {Group, Color, MeshToonMaterial} from 'three'
+import {Group, Color, MeshToonMaterial, TextureLoader, Vector3} from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import MODEL from './tree.gltf';
+import TreeMODEL from './tree.gltf';
+import LowResTreeMODEL from './tree_low_poly.gltf';
+const pineURL = require("./pine.png").default;
+const texture = new TextureLoader().load(pineURL);
+const texMaterial = new MeshToonMaterial({map: texture});
 
 class Tree extends Group {
-    constructor(color){
+    constructor(parent){
         // Call parent Group() constructor
-        super()
+        super();
+    
+        this.tree = undefined;
+        this.lowrestree = undefined;
+
 
         // Load object
         const loader = new GLTFLoader();
-        let object;
-        this.name = 'tree';
-        let meshes = []
-        loader.load(MODEL, (gltf) => {
-            let object = gltf.scene;
-            gltf.scene.traverse(e => e.isMesh && meshes.push(e) )
-            meshes[0].material = new MeshToonMaterial({color: new Color(0x6E4400)})
-            meshes[1].material = new MeshToonMaterial({color: new Color(0x082909)})
-            this.add(gltf.scene)
-        });
+        const temp = this;
+        function loadTree (gltf) {
+            gltf.scene.traverse(function(child) {
+                if(child.isMesh) {
+                    if(child.name == "Cylinder001_1") {
+                        child.material = texMaterial;
+                    } else {
+                        child.material = new MeshToonMaterial({color:0x4f2f2f});
+                    }
+                }
+            })
+            temp.tree = gltf.scene;
+            temp.add(gltf.scene);
+            
+        }
+
+        loader.load(TreeMODEL, loadTree);
+
+        function loadLowResTree (gltf) {
+            gltf.scene.traverse(function(child) {
+                if(child.isMesh) {
+                    if(child.name == "Cylinder001_1") {
+                        child.material = texMaterial;
+                    } else {
+                        child.material = new MeshToonMaterial({color:0x114312});
+                    }
+                }
+            })
+            temp.lowrestree = gltf.scene;
+            temp.add(gltf.scene);
+            
+        }
+        
+        loader.load(LowResTreeMODEL, loadLowResTree);
+        
+
         
         
+        
+    }
+
+    update(position) {
+        let dist = new Vector3().subVectors(position, this.position);
+        
+        if(this.tree != undefined && this.lowrestree != undefined) {
+            
+            if(this.tree.isObject3D && this.lowrestree.isObject3D) {
+                if (dist.length() > 20) {
+                    this.tree.visible = false;
+                    this.lowrestree.visible = true;
+                } else {
+                    this.tree.visible = true;
+                    this.lowrestree.visible = false;
+                }
+            }
+        }
         
     }
 

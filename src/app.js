@@ -5,24 +5,48 @@
  * Scene and Camera. It also starts the render loop and
  * handles window resizes.
  *
+ * It loads all of the meshes and collision bodies.
  */
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, OrthographicCamera, TextureLoader, WebGLRenderTarget, MeshBasicMaterial, Scene, Color, PlaneGeometry } from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, OrthographicCamera, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
+import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+
 import { SeedScene } from 'scenes';
 
-import { InputControl } from './components/input';
-import { SceneCustom, TestScene } from './components/scenes';
-import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder } from 'cannon-es'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+
+import { MakeAudio } from './components/audio';
+import { InputControl, PlayerVehicle } from './components/input';
+
+
+import { GamePhysicsScene,  FrustumCulling, GameScene, SceneCustom, TestScene } from './components/scenes';
+import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh, Quaternion, ConvexPolyhedron, RigidVehicle } from 'cannon-es'
+
 import CannonDebugger from 'cannon-es-debugger';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import Road from './components/objects/Road/Road';
+
+
+// load in shaders
+const vertexShaderText   = require("./components/shaders/vertexShader.vert").default;
+const fragmentShaderText = require("./components/shaders/fragmentShader.frag").default;
+console.log(vertexShaderText);
+console.log(fragmentShaderText);
 
 
 // Initialize core ThreeJS components
 // const scene = new SeedScene();
-const scene = new SceneCustom();
+const scene = new GameScene();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
+
 const scene2 = new SceneCustom();
+
+const frustCull = new FrustumCulling(scene, camera);
+const sound = new MakeAudio(camera);
+
+
 // Set up camera
 camera.position.set(0, 300, -100);
 camera.lookAt(new Vector3(0, 0, 0));
@@ -45,180 +69,194 @@ document.body.style.margin = 0; // Removes margin around page
 document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
-//Ew Orbit controls trash
+
+
+
+// scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+
+scene.fog = new FogExp2(new Color(0x1b2e4d), .006);
+
+
+const smokeParticleLocation = require("./components/textures/particlesmoke.png").default;
+const smokeParticleTexture = new TextureLoader().load(smokeParticleLocation);
+console.log(smokeParticleTexture);
+
+
+const particleCount = 1000;
+
+const particleSystem = createParticleSystem(particleCount);
+scene.add(particleSystem);
+
+// gives each particle a slight initial velocity in x/z directions
+const particleVelocities = [];
+for (let i = 0; i < particleCount; i++) {
+    particleVelocities[i] = [(Math.random() - .5) / 4, (Math.random() - .5) / 4];  
+}
+
+
+
+/*
+// NOT PROPERLY IMPLEMENTED YET, NEEDS TO BE UNCOMMENTED/TWEAKED.
+// UNCOMMENT LINES 230-231 WHEN WORKING
+// SMOKE TEXTURE
+// adapted from: https://www.youtube.com/watch?v=otavCmIuEhY
+
+const smokeTextureLocation = require("./components/textures/Smoke15Frames.png").default;
+const smokeTexture = new TextureLoader().load(smokeTextureLocation);
+smokeTexture.encoding = sRGBEncoding; // default is linear
+const smokeGeometry = new PlaneGeometry(100, 100);
+
+// LambertMaterial for nonshiny surfaces
+const smokeMaterial = new MeshLambertMaterial( {
+    color: 0x0000ff, // white for debugging
+    map: smokeTexture,
+    emissive: 0x222222,
+    opacity: .9,
+    transparent: true
+});
+
+const smoke = new Group();
+
+for (let i = 0; i < 20; i++) {
+    // can tweak i for more or less layers
+    let smokeElement = new Mesh(smokeGeometry, smokeMaterial);
+    smokeElement.scale.set(2,2,2);
+
+    // position textures at random xy positions
+    smokeElement.position.set(Math.random() * 200 - 50, Math.random() * 200 - 50, -20);
+    // probably have to adjust z
+
+    // set smoke texture rotations to random amounts on z axis
+    smokeElement.rotateOnAxis.z = Math.random * 360;
+    smoke.add(smokeElement);
+
+    console.log(smokeElement.visible);
+
+}
+scene.add(smoke);
+*/
+
 // Set up controls
+// ????
+// const controls = new FirstPersonControls( camera, canvas );
+// controls.movementSpeed = 150;
+// controls.lookSpeed = 0.01;
+
+// Ew Orbit controls trash
+
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
 controls.minDistance = 4;
-controls.maxDistance = 100;
+controls.maxDistance = 1000;
 controls.update();
 
 // physics
 const world = new World(
     {
-        gravity: new Vec3(0, -9.82 * 1.5 , 0),
+        gravity: new Vec3(0, -9.82 * 1.5, 0),
     }
 )
 
-const cannonDebugger = new CannonDebugger(scene, world);
 
-const radius = 2
-const sphereBody = new Body({
-    mass: 5,
-    shape: new Sphere(radius),
-    angularDamping: 0.4,
-    
-})
-sphereBody.position.set(2, 5, 20)
+const player = new PlayerVehicle(world, [10, 10, 0]);
 
+/*
 const boxBody = new Body({
-    shape: new Box(new Vec3(.5, .5, 1)),
+    shape: new Sphere(1),
     mass: 100,
     linearDamping: 0.8,
     angularDamping: 0.8,
     material: new Material({
-        friction: 0
-    })
-})
-boxBody.position.set(0, 15.5, -20)
+        friction: 0.5
+    }),
+    fixedRotation: true
 
+})*/
+const boxBody = player.chassis;
 
-const inputControl = new InputControl(camera, scene, boxBody);
+boxBody.position.set;
 console.log(boxBody.position)
 
-const geometry = new SphereGeometry(radius)
+
 const material = new MeshNormalMaterial()
-const sphereMesh = new Mesh(geometry, material)
 const box_geo = new BoxGeometry(1, 1, 2);
 const boxMesh = new Mesh(box_geo, material);
-scene.add(boxMesh, sphereMesh)
-const groundBody = new Body({
-    type: Body.STATIC,
-    shape: new Plane(),
-    material: new Material({
-        friction: 0
-    })
-  })
-groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0) // make it face up
-world.addBody(groundBody)
-const angledGroundBody = new Body({
-    type: Body.STATIC,
-    shape: new Plane(),
-    material: new Material({
-        friction: 0
-    })
-  })
-angledGroundBody.quaternion.setFromEuler(Math.PI, 0, 0) 
-angledGroundBody.position.set(0, 0, 50)
-// second boundary
-const angledGroundBody2 = new Body({
-    type: Body.STATIC,
-    shape: new Plane(),
-    material: new Material({
-        friction: 0
-    })
-  })
-angledGroundBody2.quaternion.setFromEuler(-  2 * Math.PI  , 0, 0) 
-angledGroundBody2.position.set(0, 0, -50)
-// third boundary
-const angledGroundBody3 = new Body({
-    type: Body.STATIC,
-    shape: new Plane(),
-    material: new Material({
-        friction: 0
-    })
-  })
-angledGroundBody3.quaternion.setFromEuler(0, - Math.PI / 2, 0) 
-angledGroundBody3.position.set(50, 0, 0)
-// fourth boundary
-const angledGroundBody4 = new Body({
-    type: Body.STATIC,
-    shape: new Plane(),
-    material: new Material({
-        friction: 0
-    })
-  })
-angledGroundBody4.quaternion.setFromEuler(0, Math.PI / 2, 0) 
-angledGroundBody4.position.set(-50, 0, 0)
-world.addBody(angledGroundBody)
-world.addBody(angledGroundBody2)
-world.addBody(angledGroundBody3)
-world.addBody(angledGroundBody4)
-// world.addBody(sphereBody);
-world.addBody(boxBody)
 
-const bump = new Body({
-    type: Body.STATIC,
-    shape: new Box(new Vec3(1, 5, 5)),
-    material: new Material({
-        friction: 0
-    })
-})
-bump.position.set(0, -0.5, 15)
-bump.quaternion.setFromEuler(- Math.PI / 6, 0, Math.PI / 2)
-const bump2 = new Body({
-    type: Body.STATIC,
-    shape: new Box(new Vec3(1, 5, 5)),
-    material: new Material({
-        friction: 0
-    })
-})
-bump2.position.set(0, -0.5, 30)
-bump2.quaternion.setFromEuler(Math.PI / 6, 0, Math.PI / 2)
-world.addBody(bump2)
-world.addBody(bump)
+// scene.add(boxMesh, sphereMesh)
+const inputControl = new InputControl(camera, scene, player, boxMesh, sound);
 
-const testBody = new Body({
-    type: Body.STATIC,
-    shape: new Cylinder(10, 20, 10, 20),
-    material: new Material({
-        friction: 0
-    })
-})
-testBody.position.set(0, 5, -20)
-world.addBody(testBody)
-
-
+scene.add(boxMesh)
 // testing the trigger
-const triggerBody = new Body({
-    isTrigger: true,
-    type: Body.STATIC,
-    position: new Vec3(0, 11, -10),
-    shape: new Box(new Vec3(4, 1, 2),)
-})
+// const triggerBody = new Body({
+//     isTrigger: true,
+//     type: Body.STATIC,
+//     position: new Vec3(0, 1.5, -10),
+//     shape: new Box(new Vec3(4, 1, 2),)
+// })
 
-function printTrigger(event){
-    console.log(event)
-    console.log(triggerBody.world)
-    bodiesToRemove.push(triggerBody)
-    world.addBody(sphereBody)
-    triggerBody.removeEventListener("collide", printTrigger)
+// function printTrigger(event) {
+//     console.log(event)
+//     console.log(triggerBody.world)
+//     bodiesToRemove.push(triggerBody)
+//     triggerBody.removeEventListener("collide", printTrigger)
+// }
+// triggerBody.addEventListener("collide", printTrigger)
+// const bodiesToRemove = []
+
+const testMat = new MeshBasicMaterial({
+    color: new Color(0x82898c),
+    side: DoubleSide
+})
+const mountainMat = new MeshBasicMaterial({
+    color: new Color(0x00898c),
+    side: DoubleSide
+})
+// load in the road models from the scene file list
+const models = scene.models;
+
+const loader = new GLTFLoader()
+loadRoads(models)
+
+function loadRoads(roadModelsToLoad){
+    for (let i = 0; i < roadModelsToLoad.length; i++) {
+        loader.load(roadModelsToLoad[i], (gltf) => {
+            let mat;
+            if (i == 1){
+                mat = mountainMat;
+            } else mat = testMat;
+            const road = new Road(gltf, mat);
+            world.addBody(road.body);
+            scene.add(road.mesh);
+            if (i == 1) road.translate(0, 0, -10)
+            scene.roads.push(road);
+        })
+    }
 }
-triggerBody.addEventListener("collide", printTrigger)
-const bodiesToRemove = []
-world.addBody(triggerBody)
-//window.addEventListener('keydown', testMove);
-// document.body.style.cursor = 'none';
-// Render loop
-let bodyToRemove = 0
-const testScene = new Scene();
-testScene.background = new Color(0xff0000);
+
+
+const cannonDebugger = new CannonDebugger(scene, world);
 
 const onAnimationFrameHandler = (timeStamp) => {
 
     controls.update();
     inputControl.update();
-    // camera.lookAt(scene.target.position);
+    sound.update();
     world.fixedStep();
+
     cannonDebugger.update();
-    if (bodiesToRemove.length > 0){
-        world.removeBody(bodiesToRemove[0])
-    }
+
+    // smoke.rotation.z += 1; UNCOMMENT WHEN WE GET SMOKE WORKING
+    // smoke.position.z += 1;
+
+    // particleSystem.position.y += 0.1;
+    updateParticleSystem(particleSystem);
+
+    // if (bodiesToRemove.length > 0) {
+    //     world.removeBody(bodiesToRemove[0])
+    // }
+
     // move all physics things and move their three visualizations along with them
-    
-    sphereMesh.position.copy(sphereBody.position)
-    sphereMesh.quaternion.copy(sphereBody.quaternion)
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
     
@@ -260,6 +298,11 @@ const onAnimationFrameHandler = (timeStamp) => {
     
    
     scene.update && scene.update(timeStamp);
+
+    frustCull.update();
+
+    scene.update && scene.update(boxBody.position);
+
     window.requestAnimationFrame(onAnimationFrameHandler);
 };
 
@@ -277,6 +320,7 @@ const windowResizeHandler = () => {
 };
 windowResizeHandler();
 window.addEventListener('resize', windowResizeHandler, false);
+
 window.addEventListener('keyup', (event) => {
     if (event.key == 'p') {
         console.log('hello')
@@ -285,11 +329,150 @@ window.addEventListener('keyup', (event) => {
 })
 
 
+
+
 // window.addEventListener('mousemove', testMouseStuff);
 
-function testMouseStuff(event){
+function testMouseStuff(event) {
     console.log(event.movementX, event.movementY)
     camera.rotateY(- event.movementX * 0.001)
     camera.rotateX(- event.movementY * 0.001)
 }
 
+
+// ADAPTED FROM THE FOLLOWING
+// CITATION: https://solutiondesign.com/insights/webgl-and-three-js-particles/
+function createParticleSystem(particleCount) {
+   
+    // Particles are just individual vertices in a geometry
+    // Create the geometry that will hold all of the vertices
+
+    const verts = [];
+   // Create the vertices and add them to the particles geometry
+    for (var p = 0; p < particleCount; p++) {
+        // This will create all the vertices in a range of -50 to 50 in xy
+        var x = Math.random() * 100 - 50;
+        var y = 0;
+        var z = Math.random() * 100 - 50;
+    
+        // Create the vertex
+        var particle = new Vector3(x, y, z);
+    
+        // Add the vertex to the geometry
+        verts.push(particle);
+    }
+   
+    let particles = new BufferGeometry().setFromPoints( verts )
+    // Create the material that will be used to render each vertex of the geometry
+    var particleMaterial = new PointsMaterial(
+    {color: 0xffffff, 
+    size: 6,
+    map: smokeParticleTexture,
+    blending: AdditiveBlending,
+    transparent: true,
+    depthTest: true
+    });
+    /* i give up this doesn't work
+    /////////////////////////
+    // CITATION, ADAPTED FROM http://stemkoski.github.io/Three.js/ParticleSystem-Attributes.html
+    // values that are constant for all particles during a draw call
+	var customUniforms = 
+	{
+		pointTexture:   { value: smokeParticleTexture },
+        color: { value: new Color( 0xffffff ) }
+	};
+	
+	// // properties that may vary from particle to particle. only accessible in vertex shaders!
+	// //	(can pass color info to fragment shader via vColor.)
+	// var customAttributes = 
+	// {
+	// 	customColor:   { type: "c", value: [] },
+    //     customSize:    { type: "c", value: []}
+	// };
+
+	// // assign values to attributes, one for each vertex of the geometry
+	// for( var v = 0; v < particleCount; v++ ) 
+	// {
+    //     const l = Math.random() * .5; // luminance
+	// 	customAttributes.customColor.value[ v ] = new Color(l, l, l);
+    //     customAttributes.customSize.value[  v ] = 2 + Math.random() * 8; 
+	// }
+
+    var shaderMaterial = new ShaderMaterial( 
+        {
+            uniforms: 		customUniforms,
+            // attributes:		customAttributes, DEPRECATED ???
+            vertexShader:   vertexShaderText,
+            fragmentShader: fragmentShaderText,
+            blending: AdditiveBlending,
+            depthTest: false,
+            transparent: true
+        });
+
+    // END CITATION 
+    ////////////////////
+    */
+
+    // Create the particle system
+    return new Points(particles, particleMaterial);
+     
+}
+
+
+// END OF CITATION
+///////////////////////
+
+// Updates particle system at each time step based on current velocity,
+// adjusting velocity once bounding box is hit and interacting with 
+// a random selection of other particles
+function updateParticleSystem(particleSystem) {
+
+    let vertices = particleSystem.geometry.attributes.position.array;
+    const numVertices = particleSystem.geometry.attributes.position.count;
+
+    const pull = .00001; // tweak as necessary
+    
+
+    // updates particle positions based on velocity
+    for (let i = 0; i < numVertices; i++) {
+        vertices[ i * 3 + 0 ] += particleVelocities[i][0];
+
+        if (Math.abs(vertices[i * 3 + 0]) > 70) {
+            // reverses with slight nudge of randomness
+            particleVelocities[i][0] *= -1;
+            particleVelocities[i][0] += (Math.random() - .5) / 8;
+        }
+        vertices[ i * 3 + 1 ] += .1; // y
+        vertices[ i * 3 + 2 ] += particleVelocities[i][1];
+        if (Math.abs(vertices[i * 3 + 2]) > 70) {
+            // reverses with slight nudge of randomness
+            particleVelocities[i][1] *= -1;
+            particleVelocities[i][1] += (Math.random() - .5) / 8;
+        }
+    }
+    // updates particle velocities through interactions with 
+    // random subset of neighbors
+    for (let i  = 0; i < numVertices; i++) {
+        const x = vertices[ i * 3 + 0 ];
+        const z = vertices[ i * 3 + 2 ];
+        for (let j = 0; j < 3; j++) {
+            const v2 = Math.floor(Math.random() * particleCount);
+            if (v2 == i) continue;
+            const x1 = vertices[ v2 * 3 + 0];
+            const z1 = vertices[ v2 * 3 + 2];
+            particleVelocities[i][0] += pull * (x1 - x);
+            particleVelocities[i][1] += pull * (z1 - z);
+
+            particleVelocities[v2][0] += pull * (x - x1);
+            particleVelocities[v2][1] += pull * (z - z1);
+        }
+
+        if (Math.abs(particleVelocities[i][0]) > .25) particleVelocities[i][0] = (Math.random() - .5) / 4; // capping
+        if (Math.abs(particleVelocities[i][1]) > .25) particleVelocities[i][1] = (Math.random() - .5) / 4; // capping
+    }
+
+
+
+
+    particleSystem.geometry.attributes.position.needsUpdate = true;
+}
