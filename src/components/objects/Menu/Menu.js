@@ -19,8 +19,8 @@ class Menu extends Scene {
         const ground_geo = new PlaneGeometry(width, height);
         const ground = new Mesh(ground_geo, ground_toon_mat);
 
-        ground.lookAt(new Vector3(0, 1, 0));
-        ground.setRotationFromQuaternion(quaternion);
+       // ground.lookAt(new Vector3(0, 1, 0));
+        //ground.setRotationFromQuaternion(quaternion);
         this.add(ground);
     }
 

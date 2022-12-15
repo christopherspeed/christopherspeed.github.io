@@ -5,7 +5,7 @@
 import { Vec3, Body, Material, Trimesh} from 'cannon-es'
 import { Mesh, Vector3 } from 'three'
 class Road {
-    constructor(loadedGLTF, mat){
+    constructor(loadedGLTF, mat, useMesh){
         // construct collision body out of the provided geometry
         const triMesh = new Trimesh(
             loadedGLTF.scene.children[0].geometry.attributes.position.array,
@@ -22,7 +22,8 @@ class Road {
 
         // fields for scene/world adding
         this.body = triBody;
-        this.mesh = roadMesh;
+        this.mesh = null;
+        if (useMesh) this.mesh = roadMesh;
     }
 
     // change the position of both the mesh and the physics body

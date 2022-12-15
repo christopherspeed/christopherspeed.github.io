@@ -8,11 +8,12 @@
  * It loads all of the meshes and collision bodies.
  */
 
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, OrthographicCamera, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2, Euler } from 'three';
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, OrthographicCamera, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2, MeshToonMaterial } from 'three';
+
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 import { SeedScene } from 'scenes';
-
+import { HUD } from './components/objects/HUD';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 import { MakeAudio } from './components/audio';
@@ -25,8 +26,12 @@ import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh
 import CannonDebugger from 'cannon-es-debugger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Road from './components/objects/Road/Road';
+
 import {Menu} from './components/objects/Menu';
 import {GameOver} from './components/objects/GameOver';
+
+
+import { Tree } from './components/objects/Tree';
 
 // // load in shaders
 // const vertexShaderText   = require("./components/shaders/vertexShader.vert").default;
@@ -45,7 +50,14 @@ const scene = new GameScene();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
+const hud = new HUD();
+const hudCamera = new PerspectiveCamera();
 
+hudCamera.position.set(0,20,0);
+hudCamera.lookAt(new Vector3(0,0,0));
+
+let miniMap = false;
+let inMenu = true;
 
 const frustCull = new FrustumCulling(scene, camera);
 const sound = new MakeAudio(camera);
@@ -63,10 +75,16 @@ overheadCamera.zoom = 0.2;
 overheadCamera.updateProjectionMatrix();
 overheadCamera.up.set(0,-1,0);
 
+/* CITATION: https://stackoverflow.com/questions/63872740/three-js-scaling-a-plane-to-full-screen 
+*/
+const menuCamera = new OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
+//menuCamera.position.set(0, 300, -100);
+//camera.lookAt(new Vector3(0, 0, 0));
  
 
 // the menu is just a scene
-const menu = new Menu(window.innerWidth, window.innerHeight, camera.quaternion);
+//const menu = new Menu(window.innerWidth, window.innerHeight, camera.quaternion);
+const menu = new Menu(2, 2, menuCamera.quaternion);
 camera.zoom = 0.4;
 camera.updateProjectionMatrix();
 // game over scene
@@ -82,12 +100,7 @@ document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
 
-
-
-// scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
-
 scene.fog = new FogExp2(new Color(0x1b2e4d), .002);
-
 
 const smokeParticleLocation = require("./components/textures/particlesmoke.png").default;
 const smokeParticleTexture = new TextureLoader().load(smokeParticleLocation);
@@ -186,7 +199,7 @@ const world = new World(
 )
 
 
-const player = new PlayerVehicle(world, [10, 10, 0]);
+const player = new PlayerVehicle(world, [3.1,16, 90]);
 
 /*
 const boxBody = new Body({
@@ -201,8 +214,7 @@ const boxBody = new Body({
 
 })*/
 const boxBody = player.chassis;
-
-boxBody.position.set;
+boxBody.quaternion.setFromEuler(-Math.PI/2, Math.PI/2, 0);
 console.log(boxBody.position)
 
 
@@ -211,7 +223,7 @@ const box_geo = new BoxGeometry(1, 1, 2);
 const boxMesh = new Mesh(box_geo, material);
 
 // scene.add(boxMesh, sphereMesh)
-const inputControl = new InputControl(camera, scene, player, boxMesh, sound);
+const inputControl = new InputControl(camera, scene, player, boxMesh, sound, hud);
 
 scene.add(boxMesh)
 // testing the trigger
@@ -231,35 +243,45 @@ scene.add(boxMesh)
 // triggerBody.addEventListener("collide", printTrigger)
 // const bodiesToRemove = []
 
-const testMat = new MeshBasicMaterial({
-    color: new Color(0x82898c),
+const testMat = new MeshToonMaterial({
+    color: new Color(0x111111),
     side: DoubleSide
 })
-const mountainMat = new MeshBasicMaterial({
-    color: new Color(0x00898c),
+const roadMat = new MeshToonMaterial({
+    color: new Color(0x411F12),
     side: DoubleSide
 })
+
 // load in the road models from the scene file list
 const models = scene.models;
-
+console.log(models)
 const loader = new GLTFLoader()
-loadRoads(models)
+loadBodies(models)
 
-function loadRoads(roadModelsToLoad){
+function loadBodies(roadModelsToLoad){
     for (let i = 0; i < roadModelsToLoad.length; i++) {
         loader.load(roadModelsToLoad[i], (gltf) => {
             let mat;
-            if (i == 1){
-                mat = mountainMat;
-            } else mat = testMat;
-            const road = new Road(gltf, mat);
+            let useMesh = true;
+            if (i == 0){
+                mat = roadMat;
+            } else if (i == 2) {
+                mat = new MeshToonMaterial({
+                    color: new Color(0x000049),
+                    side: DoubleSide
+                })
+                useMesh = false;
+            }
+            else mat = testMat;
+            const road = new Road(gltf, mat, useMesh);
             world.addBody(road.body);
             scene.add(road.mesh);
-            if (i == 1) road.translate(0, 0, -10)
+            if (i == 1 || i == 2) road.translate(0, 0, 10)
             scene.roads.push(road);
         })
     }
 }
+
 
 
 // world.addBody(roads[1].body)
@@ -276,7 +298,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     sound.update();
     world.fixedStep();
 
-    cannonDebugger.update();
+    //cannonDebugger.update();
 
     // particleSystem.position.y += 0.1;
     updateParticleSystem(particleSystem);
@@ -290,6 +312,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     // move all physics things and move their three visualizations along with them
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
+
     
     overheadCamera.position.set(boxBody.position.x, boxBody.position.y+200, boxBody.position.z);
     overheadCamera.lookAt(new Vector3(boxBody.position.x, boxBody.position.y+100, boxBody.position.z));
@@ -315,23 +338,49 @@ const onAnimationFrameHandler = (timeStamp) => {
   
     renderer.setViewport( 0, 0, window.innerWidth, window.innerHeight );
     
-    renderer.render( sceneR, camera );
+    if(!inMenu){
+        renderer.render(sceneR, camera );
+    } else {
+        renderer.render(sceneR, menuCamera);
+    }
     
-    renderer.setClearColor( 0x333333 );
+
+    if(miniMap){    
+        renderer.setClearColor( 0x333333 );
+        
+        renderer.clearDepth();
+        
+        renderer.setScissorTest( true );
+        const VIEW_X = 16;
+        const VIEW_Y = 16;
+        const VIEW_WIDTH = window.innerHeight / 4;
+        const VIEW_HEIGHT = window.innerHeight / 4;
+        renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
+        renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
     
-    renderer.clearDepth();
+        renderer.render( sceneR, overheadCamera );
+        
+        renderer.setScissorTest( false );
+    }
+
+    if(miniMap){    
+        renderer.setClearColor( 0x333333 );
+        
+        renderer.clearDepth();
+        
+        renderer.setScissorTest( true );
+        
+        const VIEW_Y = 16;
+        const VIEW_WIDTH = window.innerHeight / 4;
+        const VIEW_HEIGHT = window.innerHeight / 4;
+        const VIEW_X = window.innerWidth - VIEW_WIDTH - 16;
+        renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
+        renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
     
-    renderer.setScissorTest( true );
-    const VIEW_X = 16;
-    const VIEW_Y = 16;
-    const VIEW_WIDTH = window.innerHeight / 4;
-    const VIEW_HEIGHT = window.innerHeight / 4;
-    renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
-    renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
-  
-    renderer.render( sceneR, overheadCamera );
-      
-    renderer.setScissorTest( false );
+        renderer.render( hud, menuCamera );
+        
+        renderer.setScissorTest( false );
+    }
 
     
     // end citation
@@ -368,7 +417,6 @@ window.addEventListener('keydown', (event) => {
     if (event.key == 'p') {
         resetParticleSystem(particleSystem);
         sceneR = scene;
-
         controls = new OrbitControls(camera, canvas);
         controls.enableDamping = true;
         controls.enablePan = false;
@@ -378,7 +426,11 @@ window.addEventListener('keydown', (event) => {
         camera.zoom = 1;
         camera.updateProjectionMatrix();
         gamestart = true;
+        miniMap = true;
+        inMenu = false;
+
     }
+
 })
 
 
