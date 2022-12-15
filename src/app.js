@@ -12,6 +12,7 @@ import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtil
 import { SeedScene } from 'scenes';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
+import { MakeAudio } from './components/audio';
 import { InputControl } from './components/input';
 import { GamePhysicsScene, GameScene, SceneCustom, TestScene } from './components/scenes';
 import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh, Quaternion, ConvexPolyhedron } from 'cannon-es'
@@ -24,7 +25,7 @@ import CannonDebugger from 'cannon-es-debugger';
 const scene = new GameScene();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
-
+const sound = new MakeAudio(camera);
 // Set up camera
 camera.position.set(0, 30, -100);
 camera.lookAt(new Vector3(0, 0, 0));
@@ -125,7 +126,7 @@ const boxBody = new Body({
 })
 boxBody.position.set(20, 120, -140)
 
-const inputControl = new InputControl(camera, scene, boxBody);
+const inputControl = new InputControl(camera, scene, boxBody, sound);
 console.log(boxBody.position)
 
 const geometry = new SphereGeometry(radius)
@@ -267,6 +268,7 @@ const onAnimationFrameHandler = (timeStamp) => {
 
     controls.update();
     inputControl.update();
+    sound.update();
     // camera.lookAt(scene.target.position);
     boxRay = new Ray(boxBody.position.clone().vadd(new Vec3(0, 4, 0)), boxBody.position.clone().vadd(new Vec3(0, -4, 0)))
     // if (boxRay.result != null) console.log(boxRay.result)
