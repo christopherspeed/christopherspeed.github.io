@@ -6,6 +6,7 @@
  * handles window resizes.
  *
  */
+
 import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide } from 'three';
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SeedScene } from 'scenes';
@@ -14,6 +15,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { InputControl } from './components/input';
 import { GamePhysicsScene, GameScene, SceneCustom, TestScene } from './components/scenes';
 import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh, Quaternion, ConvexPolyhedron } from 'cannon-es'
+
 import CannonDebugger from 'cannon-es-debugger';
 
 
@@ -36,8 +38,55 @@ document.body.style.margin = 0; // Removes margin around page
 document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
-//Ew Orbit controls trash
+scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+
+/*
+// NOT PROPERLY IMPLEMENTED YET, NEEDS TO BE UNCOMMENTED/TWEAKED.
+// UNCOMMENT LINES 230-231 WHEN WORKING
+// SMOKE TEXTURE
+// adapted from: https://www.youtube.com/watch?v=otavCmIuEhY
+const smokeTextureLocation = require("./components/textures/Smoke15Frames.png").default;
+const smokeTexture = new TextureLoader().load(smokeTextureLocation);
+smokeTexture.encoding = sRGBEncoding; // default is linear
+const smokeGeometry = new PlaneGeometry(100, 100);
+
+// LambertMaterial for nonshiny surfaces
+const smokeMaterial = new MeshLambertMaterial( {
+    color: 0xffffff, // white for debugging
+    map: smokeTexture,
+    emissive: 0x222222,
+    opacity: .15,
+    transparent: true
+});
+
+const smoke = new Group();
+
+for (let i = 0; i < 20; i++) {
+    // can tweak i for more or less layers
+    let smokeElement = new Mesh(smokeGeometry, smokeMaterial);
+    smokeElement.scale.set(2,2,2);
+
+    // position textures at random xy positions
+    smokeElement.position.set(Math.random() * 200 - 50, Math.random() * 200 - 50, -20);
+    // probably have to adjust z
+
+    // set smoke texture rotations to random amounts on z axis
+    smokeElement.rotateOnAxis.z = Math.random * 360;
+    smoke.add(smokeElement);
+
+    console.log(smokeElement.visible);
+
+}
+scene.add(smoke);
+*/
+
 // Set up controls
+// ????
+// const controls = new FirstPersonControls( camera, canvas );
+// controls.movementSpeed = 150;
+// controls.lookSpeed = 0.01;
+
+// Ew Orbit controls trash
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
@@ -181,6 +230,10 @@ const triggerBody = new Body({
     shape: new Box(new Vec3(4, 1, 2),)
 })
 
+// testBody.position.set(0, 5, -30)
+// world.addBody(testBody)
+
+
 function printTrigger(event) {
     console.log(event)
     console.log(triggerBody.world)
@@ -191,6 +244,7 @@ function printTrigger(event) {
 triggerBody.addEventListener("collide", printTrigger)
 const bodiesToRemove = []
 // world.addBody(triggerBody)
+
 //window.addEventListener('keydown', testMove);
 // document.body.style.cursor = 'none';
 // Render loop
@@ -220,10 +274,17 @@ const onAnimationFrameHandler = (timeStamp) => {
 
 
     cannonDebugger.update();
+
+    // smoke.rotation.z += 1; UNCOMMENT WHEN WE GET SMOKE WORKING
+    // smoke.position.z += 1;
+    
+    
+
     if (bodiesToRemove.length > 0) {
         world.removeBody(bodiesToRemove[0])
     }
     // move all physics things and move their three visualizations along with them
+
 
     sphereMesh.position.copy(sphereBody.position)
     sphereMesh.quaternion.copy(sphereBody.quaternion)
