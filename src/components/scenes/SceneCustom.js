@@ -31,7 +31,7 @@ class SceneCustom extends Scene {
         // ground.rotateY(Math.PI)
         // ground.rotateX(3 * Math.PI / 2)
         ground.lookAt(new Vector3(0, 1, 0));
-        console.log(ground)
+        //console.log(ground)
         const thing = new Car();
         // thing.add(box);
         // thing.add(box2, box3)
