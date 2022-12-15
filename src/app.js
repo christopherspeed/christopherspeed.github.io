@@ -8,7 +8,9 @@
  * It loads all of the meshes and collision bodies.
  */
 
+
 import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, OrthographicCamera, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
+
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 import { SeedScene } from 'scenes';
@@ -25,6 +27,8 @@ import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh
 import CannonDebugger from 'cannon-es-debugger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Road from './components/objects/Road/Road';
+
+import { Tree } from './components/objects/Tree';
 import { Menu } from './components/objects/Menu';
 
 
@@ -94,9 +98,9 @@ document.body.appendChild(canvas);
 
 
 
-// scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
 
-scene.fog = new FogExp2(new Color(0x1b2e4d), .006);
+// scene.fog = new FogExp2(new Color(0x1b2e4d), .006);
 
 
 const smokeParticleLocation = require("./components/textures/particlesmoke.png").default;
@@ -239,35 +243,45 @@ scene.add(boxMesh)
 // triggerBody.addEventListener("collide", printTrigger)
 // const bodiesToRemove = []
 
-const testMat = new MeshBasicMaterial({
-    color: new Color(0x82898c),
+const testMat = new MeshToonMaterial({
+    color: new Color(0x111111),
     side: DoubleSide
 })
-const mountainMat = new MeshBasicMaterial({
-    color: new Color(0x00898c),
+const roadMat = new MeshToonMaterial({
+    color: new Color(0x411F12),
     side: DoubleSide
 })
+
 // load in the road models from the scene file list
 const models = scene.models;
-
+console.log(models)
 const loader = new GLTFLoader()
-loadRoads(models)
+loadBodies(models)
 
-function loadRoads(roadModelsToLoad){
+function loadBodies(roadModelsToLoad){
     for (let i = 0; i < roadModelsToLoad.length; i++) {
         loader.load(roadModelsToLoad[i], (gltf) => {
             let mat;
-            if (i == 1){
-                mat = mountainMat;
-            } else mat = testMat;
-            const road = new Road(gltf, mat);
+            let useMesh = true;
+            if (i == 0){
+                mat = roadMat;
+            } else if (i == 2) {
+                mat = new MeshToonMaterial({
+                    color: new Color(0x000049),
+                    side: DoubleSide
+                })
+                useMesh = false;
+            }
+            else mat = testMat;
+            const road = new Road(gltf, mat, useMesh);
             world.addBody(road.body);
             scene.add(road.mesh);
-            if (i == 1) road.translate(0, 0, -10)
+            if (i == 1 || i == 2) road.translate(0, 0, 10)
             scene.roads.push(road);
         })
     }
 }
+
 
 
 // world.addBody(roads[1].body)
@@ -284,7 +298,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     sound.update();
     world.fixedStep();
 
-    cannonDebugger.update();
+    //cannonDebugger.update();
 
     // smoke.rotation.z += 1; UNCOMMENT WHEN WE GET SMOKE WORKING
     // smoke.position.z += 1;
@@ -301,6 +315,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     // move all physics things and move their three visualizations along with them
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
+
     
     overheadCamera.position.set(boxBody.position.x, boxBody.position.y+200, boxBody.position.z);
     overheadCamera.lookAt(new Vector3(boxBody.position.x, boxBody.position.y+100, boxBody.position.z));

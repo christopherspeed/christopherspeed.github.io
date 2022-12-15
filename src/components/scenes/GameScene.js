@@ -2,7 +2,8 @@ import { Color, CylinderGeometry, MeshBasicMaterial, Scene, Vector3 } from 'thre
 import { BoxGeometry, SphereGeometry, PlaneGeometry, Mesh, MeshToonMaterial } from 'three';
 import { BasicLights } from 'lights'
 
-import ROAD2 from '../models/Road Models/road.gltf'
+import ROAD from '../models/road.gltf'
+import EDGE from '../models/road_edge.gltf'
 import MOUNTAIN from '../models/mountain.gltf'
 
 class GameScene extends Scene {
@@ -16,8 +17,9 @@ class GameScene extends Scene {
         this.roads = [];
         this.models = [];
         this.models.push(
-            ROAD2,
-            MOUNTAIN
+            MOUNTAIN,
+            ROAD,
+            EDGE
         );
         
     }
