@@ -19,7 +19,7 @@ import CannonDebugger from 'cannon-es-debugger';
 
 // Initialize core ThreeJS components
 // const scene = new SeedScene();
-const scene = new GameScene();
+const scene = new SceneCustom();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
@@ -44,6 +44,14 @@ controls.enablePan = false;
 controls.minDistance = 4;
 controls.maxDistance = 1000;
 controls.update();
+
+
+function firstPerson(){
+    console.log(boxMesh.matrix);
+    const w = boxMesh.localToWorld(new Vector3(0,0,1));
+    camera.position.copy(boxMesh.position);
+    camera.lookAt(w);
+}
 
 // physics
 const world = new World(
@@ -289,6 +297,7 @@ const onAnimationFrameHandler = (timeStamp) => {
 
     renderer.render(scene, camera);
     scene.update && scene.update(timeStamp);
+    //firstPerson();
     window.requestAnimationFrame(onAnimationFrameHandler);
 };
 window.requestAnimationFrame(onAnimationFrameHandler);
