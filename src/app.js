@@ -46,7 +46,7 @@ document.body.style.margin = 0; // Removes margin around page
 document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
-scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+scene.fog = new FogExp2(new Color(0x1b2e4d), .002);
 
 
 const smokeParticleLocation = require("./components/textures/particlesmoke.png").default;
