@@ -1,7 +1,7 @@
 import {Group, Color, MeshToonMaterial, TextureLoader, Vector3} from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import TreeMODEL from './tree.gltf';
-import FlowerMODEL from './flower.gltf';
+import LowResTreeMODEL from './tree_low_poly.gltf';
 const pineURL = require("./pine.png").default;
 const texture = new TextureLoader().load(pineURL);
 const texMaterial = new MeshToonMaterial({map: texture});
@@ -12,7 +12,7 @@ class Tree extends Group {
         super();
     
         this.tree = undefined;
-        this.flower = undefined;
+        this.lowrestree = undefined;
 
 
         // Load object
@@ -35,12 +35,22 @@ class Tree extends Group {
 
         loader.load(TreeMODEL, loadTree);
 
-        function loadFlower(gtlf) {
-            temp.flower = gtlf.scene;
-            temp.add(gtlf.scene);
+        function loadLowResTree (gltf) {
+            gltf.scene.traverse(function(child) {
+                if(child.isMesh) {
+                    if(child.name == "Cylinder001_1") {
+                        child.material = texMaterial;
+                    } else {
+                        child.material = new MeshToonMaterial({color:0x114312});
+                    }
+                }
+            })
+            temp.lowrestree = gltf.scene;
+            temp.add(gltf.scene);
+            
         }
         
-        loader.load(FlowerMODEL, loadFlower);
+        loader.load(LowResTreeMODEL, loadLowResTree);
         
 
         
@@ -51,15 +61,15 @@ class Tree extends Group {
     update(position) {
         let dist = new Vector3().subVectors(position, this.position);
         
-        if(this.tree != undefined && this.flower != undefined) {
+        if(this.tree != undefined && this.lowrestree != undefined) {
             
-            if(this.tree.isObject3D && this.flower.isObject3D) {
+            if(this.tree.isObject3D && this.lowrestree.isObject3D) {
                 if (dist.length() > 20) {
                     this.tree.visible = false;
-                    this.flower.visible = true;
+                    this.lowrestree.visible = true;
                 } else {
                     this.tree.visible = true;
-                    this.flower.visible = false;
+                    this.lowrestree.visible = false;
                 }
             }
         }
