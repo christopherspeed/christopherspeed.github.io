@@ -8,7 +8,13 @@
  * It loads all of the meshes and collision bodies.
  */
 
+
 import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
+
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
+import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { SeedScene } from 'scenes';
+
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 import { MakeAudio } from './components/audio';
@@ -21,6 +27,13 @@ import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh
 import CannonDebugger from 'cannon-es-debugger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Road from './components/objects/Road/Road';
+
+
+// load in shaders
+const vertexShaderText   = require("./components/shaders/vertexShader.vert").default;
+const fragmentShaderText = require("./components/shaders/fragmentShader.frag").default;
+console.log(vertexShaderText);
+console.log(fragmentShaderText);
 
 
 // Initialize core ThreeJS components
@@ -47,7 +60,28 @@ document.body.appendChild(canvas);
 
 
 
+
 // scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+
+scene.fog = new FogExp2(new Color(0x1b2e4d), .006);
+
+
+const smokeParticleLocation = require("./components/textures/particlesmoke.png").default;
+const smokeParticleTexture = new TextureLoader().load(smokeParticleLocation);
+console.log(smokeParticleTexture);
+
+
+const particleCount = 1000;
+
+const particleSystem = createParticleSystem(particleCount);
+scene.add(particleSystem);
+
+// gives each particle a slight initial velocity in x/z directions
+const particleVelocities = [];
+for (let i = 0; i < particleCount; i++) {
+    particleVelocities[i] = [(Math.random() - .5) / 4, (Math.random() - .5) / 4];  
+}
+
 
 
 /*
@@ -201,10 +235,14 @@ const onAnimationFrameHandler = (timeStamp) => {
 
     // smoke.rotation.z += 1; UNCOMMENT WHEN WE GET SMOKE WORKING
     // smoke.position.z += 1;
-    
-    // if (bodiesToRemove.length > 0) {
-    //     world.removeBody(bodiesToRemove[0])
-    // }
+
+    // particleSystem.position.y += 0.1;
+    updateParticleSystem(particleSystem);
+
+    if (bodiesToRemove.length > 0) {
+        world.removeBody(bodiesToRemove[0])
+    }
+
     // move all physics things and move their three visualizations along with them
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
@@ -224,3 +262,159 @@ const windowResizeHandler = () => {
 };
 windowResizeHandler();
 window.addEventListener('resize', windowResizeHandler, false);
+
+window.addEventListener('keyup', (event) => {
+    if (event.key == 'p') {
+        console.log('hello')
+        box.applyImpulse(new Vec3(0, 10, 0))
+    }
+})
+
+
+
+
+// window.addEventListener('mousemove', testMouseStuff);
+
+function testMouseStuff(event) {
+    console.log(event.movementX, event.movementY)
+    camera.rotateY(- event.movementX * 0.001)
+    camera.rotateX(- event.movementY * 0.001)
+}
+
+
+// ADAPTED FROM THE FOLLOWING
+// CITATION: https://solutiondesign.com/insights/webgl-and-three-js-particles/
+function createParticleSystem(particleCount) {
+   
+    // Particles are just individual vertices in a geometry
+    // Create the geometry that will hold all of the vertices
+
+    const verts = [];
+   // Create the vertices and add them to the particles geometry
+    for (var p = 0; p < particleCount; p++) {
+        // This will create all the vertices in a range of -50 to 50 in xy
+        var x = Math.random() * 100 - 50;
+        var y = 0;
+        var z = Math.random() * 100 - 50;
+    
+        // Create the vertex
+        var particle = new Vector3(x, y, z);
+    
+        // Add the vertex to the geometry
+        verts.push(particle);
+    }
+   
+    let particles = new BufferGeometry().setFromPoints( verts )
+    // Create the material that will be used to render each vertex of the geometry
+    var particleMaterial = new PointsMaterial(
+    {color: 0xffffff, 
+    size: 6,
+    map: smokeParticleTexture,
+    blending: AdditiveBlending,
+    transparent: true,
+    depthTest: true
+    });
+    /* i give up this doesn't work
+    /////////////////////////
+    // CITATION, ADAPTED FROM http://stemkoski.github.io/Three.js/ParticleSystem-Attributes.html
+    // values that are constant for all particles during a draw call
+	var customUniforms = 
+	{
+		pointTexture:   { value: smokeParticleTexture },
+        color: { value: new Color( 0xffffff ) }
+	};
+	
+	// // properties that may vary from particle to particle. only accessible in vertex shaders!
+	// //	(can pass color info to fragment shader via vColor.)
+	// var customAttributes = 
+	// {
+	// 	customColor:   { type: "c", value: [] },
+    //     customSize:    { type: "c", value: []}
+	// };
+
+	// // assign values to attributes, one for each vertex of the geometry
+	// for( var v = 0; v < particleCount; v++ ) 
+	// {
+    //     const l = Math.random() * .5; // luminance
+	// 	customAttributes.customColor.value[ v ] = new Color(l, l, l);
+    //     customAttributes.customSize.value[  v ] = 2 + Math.random() * 8; 
+	// }
+
+    var shaderMaterial = new ShaderMaterial( 
+        {
+            uniforms: 		customUniforms,
+            // attributes:		customAttributes, DEPRECATED ???
+            vertexShader:   vertexShaderText,
+            fragmentShader: fragmentShaderText,
+            blending: AdditiveBlending,
+            depthTest: false,
+            transparent: true
+        });
+
+    // END CITATION 
+    ////////////////////
+    */
+
+    // Create the particle system
+    return new Points(particles, particleMaterial);
+     
+}
+
+
+// END OF CITATION
+///////////////////////
+
+// Updates particle system at each time step based on current velocity,
+// adjusting velocity once bounding box is hit and interacting with 
+// a random selection of other particles
+function updateParticleSystem(particleSystem) {
+
+    let vertices = particleSystem.geometry.attributes.position.array;
+    const numVertices = particleSystem.geometry.attributes.position.count;
+
+    const pull = .00001; // tweak as necessary
+    
+
+    // updates particle positions based on velocity
+    for (let i = 0; i < numVertices; i++) {
+        vertices[ i * 3 + 0 ] += particleVelocities[i][0];
+
+        if (Math.abs(vertices[i * 3 + 0]) > 70) {
+            // reverses with slight nudge of randomness
+            particleVelocities[i][0] *= -1;
+            particleVelocities[i][0] += (Math.random() - .5) / 8;
+        }
+        vertices[ i * 3 + 1 ] += .1; // y
+        vertices[ i * 3 + 2 ] += particleVelocities[i][1];
+        if (Math.abs(vertices[i * 3 + 2]) > 70) {
+            // reverses with slight nudge of randomness
+            particleVelocities[i][1] *= -1;
+            particleVelocities[i][1] += (Math.random() - .5) / 8;
+        }
+    }
+    // updates particle velocities through interactions with 
+    // random subset of neighbors
+    for (let i  = 0; i < numVertices; i++) {
+        const x = vertices[ i * 3 + 0 ];
+        const z = vertices[ i * 3 + 2 ];
+        for (let j = 0; j < 3; j++) {
+            const v2 = Math.floor(Math.random() * particleCount);
+            if (v2 == i) continue;
+            const x1 = vertices[ v2 * 3 + 0];
+            const z1 = vertices[ v2 * 3 + 2];
+            particleVelocities[i][0] += pull * (x1 - x);
+            particleVelocities[i][1] += pull * (z1 - z);
+
+            particleVelocities[v2][0] += pull * (x - x1);
+            particleVelocities[v2][1] += pull * (z - z1);
+        }
+
+        if (Math.abs(particleVelocities[i][0]) > .25) particleVelocities[i][0] = (Math.random() - .5) / 4; // capping
+        if (Math.abs(particleVelocities[i][1]) > .25) particleVelocities[i][1] = (Math.random() - .5) / 4; // capping
+    }
+
+
+
+
+    particleSystem.geometry.attributes.position.needsUpdate = true;
+}
