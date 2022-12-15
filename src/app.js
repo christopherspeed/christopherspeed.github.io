@@ -186,7 +186,7 @@ const world = new World(
 )
 
 
-const player = new PlayerVehicle(world, [3.1,16, 90]);
+const player = new PlayerVehicle(world, [3.1,16, 100]);
 
 /*
 const boxBody = new Body({
@@ -294,25 +294,12 @@ const killBody = new Body({
 world.addBody(killBody)
 killBody.addEventListener("collide", endGame)
 gameEndBody.addEventListener("collide", endGame)
-// testing the trigger
-// const triggerBody = new Body({
-//     isTrigger: true,
-//     type: Body.STATIC,
-//     position: new Vec3(0, 1.5, -10),
-//     shape: new Box(new Vec3(4, 1, 2),)
-// })
+
 function endGame(){
     console.log("Game Over!")
     world.removeBody(boxBody)
 }
-// function printTrigger(event) {
-//     console.log(event)
-//     console.log(triggerBody.world)
-//     bodiesToRemove.push(triggerBody)
-//     triggerBody.removeEventListener("collide", printTrigger)
-// }
-// triggerBody.addEventListener("collide", printTrigger)
-// const bodiesToRemove = []
+
 world.addBody(gameEndBody)
 
 var sceneR = menu;
@@ -328,8 +315,8 @@ const onAnimationFrameHandler = (timeStamp) => {
     world.step(1/60);
     //world.fixedStep();
 
-    cannonDebugger.update();
-    console.log(boxBody.position)
+    // cannonDebugger.update();
+    //console.log(boxBody.position)
     // particleSystem.position.y += 0.1;
     updateParticleSystem(particleSystem);
 
@@ -351,9 +338,9 @@ const onAnimationFrameHandler = (timeStamp) => {
     overheadCamera.lookAt(new Vector3(boxBody.position.x, boxBody.position.y+10, boxBody.position.z));
 
     // GAME OVER!
-    if (boxMesh.position.y <= particleSystem.geometry.attributes.position.array[1] + 5 && gamestart) {
+    if (boxMesh.position.y <= particleSystem.geometry.attributes.position.array[1] + 2 && gamestart) {
         renderer.render( gameover, camera );
-        console.log('gameover');
+        world.removeBody(boxBody)
         gamestart = false;
     }
 
