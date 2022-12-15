@@ -12,11 +12,16 @@ import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtil
 import { SeedScene } from 'scenes';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
+import { MakeAudio } from './components/audio';
 import { InputControl } from './components/input';
-import { GamePhysicsScene, GameScene, SceneCustom, TestScene } from './components/scenes';
-import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh, Quaternion, ConvexPolyhedron } from 'cannon-es'
 
+import { GamePhysicsScene,  FrustumCulling, GameScene, SceneCustom, TestScene } from './components/scenes';
+import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh, Quaternion, ConvexPolyhedron } from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger';
+import MODEL1 from './components/models/test_environment.gltf'
+import MODEL2 from './components/models/test_road.gltf'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import Road from './components/objects/Road/Road';
 
 
 // Initialize core ThreeJS components
@@ -24,6 +29,9 @@ import CannonDebugger from 'cannon-es-debugger';
 const scene = new GameScene();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
+
+const frustCull = new FrustumCulling(scene, camera);
+const sound = new MakeAudio(camera);
 
 // Set up camera
 camera.position.set(0, 30, -100);
@@ -108,8 +116,6 @@ const world = new World(
     }
 )
 
-
-
 const radius = 2
 const sphereBody = new Body({
     mass: 5,
@@ -129,9 +135,9 @@ const boxBody = new Body({
     }),
     fixedRotation: true
 })
-boxBody.position.set(20, 120, -140)
+boxBody.position.set(-20, 120, 140)
 
-const inputControl = new InputControl(camera, scene, boxBody);
+const inputControl = new InputControl(camera, scene, boxBody, sound);
 console.log(boxBody.position)
 
 const geometry = new SphereGeometry(radius)
@@ -141,94 +147,8 @@ const box_geo = new BoxGeometry(1, 1, 2);
 const boxMesh = new Mesh(box_geo, material);
 // scene.add(boxMesh, sphereMesh)
 scene.add(boxMesh)
-const groundBody = new Body({
-    type: Body.STATIC,
-    shape: new Plane(),
-    material: new Material({
-        friction: 0
-    })
-})
-groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0) // make it face up
-// world.addBody(groundBody)
-const angledGroundBody = new Body({
-    type: Body.STATIC,
-    shape: new Plane(),
-    material: new Material({
-        friction: 0
-    })
-})
-angledGroundBody.quaternion.setFromEuler(Math.PI, 0, 0)
-angledGroundBody.position.set(0, 0, 50)
-// second boundary
-const angledGroundBody2 = new Body({
-    type: Body.STATIC,
-    shape: new Plane(),
-    material: new Material({
-        friction: 0
-    })
-})
-angledGroundBody2.quaternion.setFromEuler(-  2 * Math.PI, 0, 0)
-angledGroundBody2.position.set(0, 0, -50)
-// third boundary
-const angledGroundBody3 = new Body({
-    type: Body.STATIC,
-    shape: new Plane(),
-    material: new Material({
-        friction: 0
-    })
-})
-angledGroundBody3.quaternion.setFromEuler(0, - Math.PI / 2, 0)
-angledGroundBody3.position.set(50, 0, 0)
-// fourth boundary
-const angledGroundBody4 = new Body({
-    type: Body.STATIC,
-    shape: new Plane(),
-    material: new Material({
-        friction: 0
-    })
-})
-angledGroundBody4.quaternion.setFromEuler(0, Math.PI / 2, 0)
-angledGroundBody4.position.set(-50, 0, 0)
-// world.addBody(angledGroundBody)
-// world.addBody(angledGroundBody2)
-// world.addBody(angledGroundBody3)
-// world.addBody(angledGroundBody4)
-// world.addBody(sphereBody);
+
 world.addBody(boxBody)
-
-// const bump = new Body({
-//     type: Body.STATIC,
-//     shape: new Box(new Vec3(1, 5, 5)),
-//     material: new Material({
-//         friction: 0
-//     })
-// })
-// bump.position.set(0, -0.5, 15)
-// bump.quaternion.setFromEuler(- Math.PI / 6, 0, Math.PI / 2)
-// const bump2 = new Body({
-//     type: Body.STATIC,
-//     shape: new Box(new Vec3(1, 5, 5)),
-//     material: new Material({
-//         friction: 0
-//     })
-// })
-// bump2.position.set(0, -0.5, 30)
-// bump2.quaternion.setFromEuler(Math.PI / 6, 0, Math.PI / 2)
-// world.addBody(bump2) 
-// world.addBody(bump)
-
-
-// load all of the physics colliders
-// const gamePhysics = new GamePhysicsScene()
-// const physicsBodies = gamePhysics.roadBodies
-// const environmentalBodies = gamePhysics.environBodies;
-// for (let i = 0; i < physicsBodies.length; i++) {
-//     world.addBody(physicsBodies[i])
-// }
-// for (let i = 0; i < environmentalBodies.length; i++) {
-//     world.addBody(environmentalBodies[i])
-// }
-
 // testing the trigger
 const triggerBody = new Body({
     isTrigger: true,
@@ -250,16 +170,27 @@ function printTrigger(event) {
 }
 triggerBody.addEventListener("collide", printTrigger)
 const bodiesToRemove = []
-// world.addBody(triggerBody)
 
-//window.addEventListener('keydown', testMove);
-// document.body.style.cursor = 'none';
-// Render loop
-let bodyToRemove = 0
-let boxRay = new Ray(boxBody.position, boxBody.position.vadd(new Vec3(0, -1, 0)))
-const roads = scene.roads;
+const roads = []
 
 
+const testMat = new MeshBasicMaterial({
+    color: new Color(0x82898c)
+})
+
+const loader = new GLTFLoader()
+loader.load(MODEL1, (gltf) => {
+    const road = new Road(gltf, testMat)
+    world.addBody(road.body)
+    scene.add(road.mesh)
+})
+loader.load(MODEL2, (gltf) => {
+    const road = new Road(gltf, testMat)
+    world.addBody(road.body)
+    scene.add(road.mesh)
+})
+
+// world.add(roads[0].body)
 // console.log(roads[0])
 // world.addBody(roads[0].body)
 // scene.add(roads[0].mesh)
@@ -273,12 +204,13 @@ const onAnimationFrameHandler = (timeStamp) => {
 
     controls.update();
     inputControl.update();
+    sound.update();
     // camera.lookAt(scene.target.position);
-    boxRay = new Ray(boxBody.position.clone().vadd(new Vec3(0, 4, 0)), boxBody.position.clone().vadd(new Vec3(0, -4, 0)))
+    // boxRay = new Ray(boxBody.position.clone().vadd(new Vec3(0, 4, 0)), boxBody.position.clone().vadd(new Vec3(0, -4, 0)))
+
     // if (boxRay.result != null) console.log(boxRay.result)
     world.fixedStep();
     // draw new ray
-
 
     cannonDebugger.update();
 
@@ -297,7 +229,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     sphereMesh.quaternion.copy(sphereBody.quaternion)
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
-
+    frustCull.update();
     renderer.render(scene, camera);
     scene.update && scene.update(boxBody.position);
     window.requestAnimationFrame(onAnimationFrameHandler);
@@ -313,6 +245,7 @@ const windowResizeHandler = () => {
 };
 windowResizeHandler();
 window.addEventListener('resize', windowResizeHandler, false);
+
 window.addEventListener('keyup', (event) => {
     if (event.key == 'p') {
         console.log('hello')

@@ -4,7 +4,7 @@ import { Body, Vec3 } from "cannon-es"
 class InputControl {
     // IMPORTANT: Input arguments can be updated. Just pass in what ever 
     // you want to modify for any input and set it to a var as below!
-    constructor(camera, scene, playerObj){
+    constructor(camera, scene, playerObj, audio){
         this.state = {
             // Put states in here
             gui: 0
@@ -13,6 +13,7 @@ class InputControl {
         // Be able to interact with camera and scene
         this.camera = camera;
         this.scene = scene;
+        this.audio = audio;
 
         // Locally where is the camera moving towards.
         this.targetLocal = new Vector3();
@@ -42,6 +43,8 @@ class InputControl {
             s: 0,
             a: 0,
             d: 0,
+            k: 0,
+            l: 0,
             arrowup: 0,
             arrowdown: 0,
             arrowleft: 0,
@@ -76,6 +79,7 @@ class InputControl {
             switch(ele){
                 case 'w':
                     // this.targetLocal.add(new Vector3(0,0,-this.camSpeed));
+
                     this.subject.applyLocalImpulse(new Vec3(0, 0, 25))
                     break;
                 case 's':
@@ -88,6 +92,14 @@ class InputControl {
                 case 'd':
                     this.subject.applyLocalImpulse(new Vec3(-5, 0, 0))
                     break;
+                case 'k':
+                    if (this.audio.guitar.isPlaying) {
+                        this.audio.guitar.pause();
+                    } else {
+                        this.audio.guitar.play();
+                    }
+                case 'l':
+                    this.audio.beep.play();
                 case 'arrowup':
                     break;
                 case 'arrowdown':
