@@ -103,6 +103,24 @@ for (let i = 0; i < particleCount; i++) {
 }
 
 
+// COLLISION TO END GAME
+
+const smokeBody = new Body({
+    isTrigger: true,
+    type: Body.STATIC,
+    position: new Vec3(0, 0, 0),
+    shape: new Box(new Vector3(100, 1, 100))
+})
+
+function printTrigger(event) {
+    console.log(event)
+    console.log(triggerBody.world)
+    //bodiesToRemove.push(triggerBody) ??
+    smokeBody.removeEventListener("collide", printTrigger)
+}
+smokeBody.addEventListener("collide", printTrigger)
+
+
 
 /*
 // NOT PROPERLY IMPLEMENTED YET, NEEDS TO BE UNCOMMENTED/TWEAKED.
@@ -261,10 +279,12 @@ const onAnimationFrameHandler = (timeStamp) => {
 
     // particleSystem.position.y += 0.1;
     updateParticleSystem(particleSystem);
+    smokeBody.position.copy(particleSystem.position);
 
     // if (bodiesToRemove.length > 0) {
     //     world.removeBody(bodiesToRemove[0])
-    // }
+    // } 
+
 
     // move all physics things and move their three visualizations along with them
     boxMesh.position.copy(boxBody.position)
@@ -467,7 +487,7 @@ function updateParticleSystem(particleSystem) {
             particleVelocities[i][0] *= -1;
             particleVelocities[i][0] += (Math.random() - .5) / 8;
         }
-        vertices[ i * 3 + 1 ] += .1; // y
+        vertices[ i * 3 + 1 ] += .001; // y
         vertices[ i * 3 + 2 ] += particleVelocities[i][1];
         if (Math.abs(vertices[i * 3 + 2]) > 70) {
             // reverses with slight nudge of randomness
