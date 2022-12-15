@@ -46,7 +46,6 @@ const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
 
-const scene2 = new SceneCustom();
 
 const frustCull = new FrustumCulling(scene, camera);
 const sound = new MakeAudio(camera);
@@ -60,7 +59,7 @@ camera.lookAt(new Vector3(0, 0, 0));
 const overheadCamera = new OrthographicCamera();
 overheadCamera.position.set(0, 10, 100);
 overheadCamera.lookAt(new Vector3(0, 0, 0));
-overheadCamera.zoom = 0.1;
+overheadCamera.zoom = 0.2;
 overheadCamera.updateProjectionMatrix();
 overheadCamera.up.set(0,-1,0);
 
@@ -68,7 +67,7 @@ overheadCamera.up.set(0,-1,0);
 
 // the menu is just a scene
 const menu = new Menu(window.innerWidth, window.innerHeight, camera.quaternion);
-camera.zoom = 0.1;
+camera.zoom = 0.4;
 camera.updateProjectionMatrix();
 
 // Set up renderer, canvas, and minor CSS adjustments
@@ -288,7 +287,7 @@ const onAnimationFrameHandler = (timeStamp) => {
   
     renderer.setViewport( 0, 0, window.innerWidth, window.innerHeight );
     
-    renderer.render( scene, camera );
+    renderer.render( sceneR, camera );
     
     renderer.setClearColor( 0x333333 );
     
@@ -302,17 +301,19 @@ const onAnimationFrameHandler = (timeStamp) => {
     renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
     renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
   
-    renderer.render( scene, overheadCamera );
+    renderer.render( sceneR, overheadCamera );
       
     renderer.setScissorTest( false );
+
+    
     // end citation
     
    
-    scene.update && scene.update(timeStamp);
+    //scene.update && scene.update(timeStamp);
 
     frustCull.update();
 
-    renderer.render(sceneR, camera);
+    //renderer.render(sceneR, camera);
 
 
 
