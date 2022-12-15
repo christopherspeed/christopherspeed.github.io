@@ -46,6 +46,8 @@ const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
 
+let miniMap = false;
+let inMenu = true;
 
 const frustCull = new FrustumCulling(scene, camera);
 const sound = new MakeAudio(camera);
@@ -63,10 +65,16 @@ overheadCamera.zoom = 0.2;
 overheadCamera.updateProjectionMatrix();
 overheadCamera.up.set(0,-1,0);
 
+/* CITATION: https://stackoverflow.com/questions/63872740/three-js-scaling-a-plane-to-full-screen 
+*/
+const menuCamera = new OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
+//menuCamera.position.set(0, 300, -100);
+//camera.lookAt(new Vector3(0, 0, 0));
  
 
 // the menu is just a scene
-const menu = new Menu(window.innerWidth, window.innerHeight, camera.quaternion);
+//const menu = new Menu(window.innerWidth, window.innerHeight, camera.quaternion);
+const menu = new Menu(2, 2, menuCamera.quaternion);
 camera.zoom = 0.4;
 camera.updateProjectionMatrix();
 
@@ -182,7 +190,7 @@ const world = new World(
 )
 
 
-const player = new PlayerVehicle(world, [10, 10, 0]);
+const player = new PlayerVehicle(world, [3.1, 20, 90]);
 
 /*
 const boxBody = new Body({
@@ -198,7 +206,6 @@ const boxBody = new Body({
 })*/
 const boxBody = player.chassis;
 
-boxBody.position.set;
 console.log(boxBody.position)
 
 
@@ -307,23 +314,30 @@ const onAnimationFrameHandler = (timeStamp) => {
   
     renderer.setViewport( 0, 0, window.innerWidth, window.innerHeight );
     
-    renderer.render( sceneR, camera );
+    if(!inMenu){
+        renderer.render(sceneR, camera );
+    } else {
+        renderer.render(sceneR, menuCamera);
+    }
+
+
+    if(miniMap){    
+        renderer.setClearColor( 0x333333 );
+        
+        renderer.clearDepth();
+        
+        renderer.setScissorTest( true );
+        const VIEW_X = 16;
+        const VIEW_Y = 16;
+        const VIEW_WIDTH = window.innerHeight / 4;
+        const VIEW_HEIGHT = window.innerHeight / 4;
+        renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
+        renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
     
-    renderer.setClearColor( 0x333333 );
-    
-    renderer.clearDepth();
-    
-    renderer.setScissorTest( true );
-    const VIEW_X = 16;
-    const VIEW_Y = 16;
-    const VIEW_WIDTH = window.innerHeight / 4;
-    const VIEW_HEIGHT = window.innerHeight / 4;
-    renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
-    renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
-  
-    renderer.render( sceneR, overheadCamera );
-      
-    renderer.setScissorTest( false );
+        renderer.render( sceneR, overheadCamera );
+        
+        renderer.setScissorTest( false );
+    }
 
     
     // end citation
@@ -370,6 +384,8 @@ window.addEventListener('keydown', (event) => {
         controls.update();
         camera.zoom = 1;
         camera.updateProjectionMatrix();
+        miniMap = true;
+        inMenu = false;
     }
 })
 
