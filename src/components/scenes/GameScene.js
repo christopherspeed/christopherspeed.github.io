@@ -2,10 +2,8 @@ import { Color, CylinderGeometry, MeshBasicMaterial, Scene, Vector3 } from 'thre
 import { BoxGeometry, SphereGeometry, PlaneGeometry, Mesh, MeshToonMaterial } from 'three';
 import { BasicLights } from 'lights'
 
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import MODEL from '../models/test_road.gltf'
-import MODEL2 from '../models/test_environment.gltf'
-import Road from '../objects/Road/Road.js'
+import ROAD2 from '../models/Road Models/road.gltf'
+import MOUNTAIN from '../models/mountain.gltf'
 
 class GameScene extends Scene {
     constructor() {
@@ -15,9 +13,12 @@ class GameScene extends Scene {
         const lights = new BasicLights();
         this.add(lights);
 
-        this.roads = []
-        this.models = []
-        this.models.push(MODEL, MODEL2)
+        this.roads = [];
+        this.models = [];
+        this.models.push(
+            ROAD2,
+            MOUNTAIN
+        );
         
     }
 }

@@ -1,19 +1,17 @@
 {
   "name": "the-drive",
-  "repository": "REPOSITORY-NAME-AS-IT-APPEARS-IN-GITHUB-URL",
-  "version": "0.1.0",
+  "repository": "cos-426-final-project",
+  "version": "0.8.0",
   "title": "The Drive",
-  "description": "SHORT DESCRIPTION OF PROJECT HERE. ONE TO TWO SENTENCES MAX",
+  "description": "A spooky first-person drive up a mountain as fog chases you.",
   "keywords": [
     "Princeton",
     "graphics",
     "three.js",
     "COS 426",
-    "ivy league",
-    "keyword1",
-    "keyword2",
-    "...",
-    "this last entry CANNOT have a comma after it ->"
+    "driving simulator",
+    "spooky",
+    "cannon-es.js"
   ],
   "scripts": {
     "start": "webpack-dev-server --mode development --output-public-path \"\"",
@@ -26,6 +24,7 @@
     "cannon-es": "^0.20.0",
     "cannon-es-debugger": "^1.0.0",
     "dat.gui": "^0.7.7",
+    "regenerator-runtime": "^0.13.11",
     "three": "^0.147.0",
     "webpack-cli": "^5.0.0"
   },
