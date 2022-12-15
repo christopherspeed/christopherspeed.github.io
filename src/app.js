@@ -27,8 +27,14 @@ import CannonDebugger from 'cannon-es-debugger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Road from './components/objects/Road/Road';
 
-import {Menu} from './components/objects/Menu';
+
+import { Tree } from './components/objects/Tree';
+import { Menu } from './components/objects/Menu';
+import { MaterialLoader } from 'three';
+
+
 import {GameOver} from './components/objects/GameOver';
+
 
 
 import { Tree } from './components/objects/Tree';
@@ -198,14 +204,38 @@ boxBody.quaternion.setFromEuler(-Math.PI/2, Math.PI/2, 0);
 console.log(boxBody.position)
 
 
-const material = new MeshNormalMaterial()
+const materialBox = new MeshNormalMaterial()
 const box_geo = new BoxGeometry(1, 1, 2);
-const boxMesh = new Mesh(box_geo, material);
+const boxMesh = new Mesh(box_geo, materialBox);
+
+const materialWheel = new MeshBasicMaterial({color: 0xffc0cb});
+materialWheel.transparent = true;
+materialWheel.opacity = 0.5;
+
+const wheelBodies = player.vehicle.wheelBodies;
+console.log(wheelBodies.length);
+const sphere_geo = new SphereGeometry(wheelBodies[0].shapes[0].radius);
+
+const threeArray = new Array(); 
+const cannonArray = new Array(); 
+
+threeArray.push(boxMesh);
+cannonArray.push(boxBody);
+boxBody.sleepSpeedLimit = 1.0
+scene.add(boxMesh)
+
+for(let i = 0; i < wheelBodies.length; i++ ){
+    const circle = new Mesh(sphere_geo, materialWheel);
+    threeArray.push(circle);
+    cannonArray.push(wheelBodies[i]);
+    scene.add(circle);
+}
+
 
 // scene.add(boxMesh, sphereMesh)
 const inputControl = new InputControl(camera, scene, player, boxMesh, sound, hud);
 
-scene.add(boxMesh)
+
 // testing the trigger
 // const triggerBody = new Body({
 //     isTrigger: true,
@@ -276,7 +306,9 @@ const onAnimationFrameHandler = (timeStamp) => {
     //controls.update();
     inputControl.update();
     sound.update();
-    world.fixedStep();
+
+    world.step(1/60);
+    //world.fixedStep();
 
     //cannonDebugger.update();
 
@@ -290,8 +322,11 @@ const onAnimationFrameHandler = (timeStamp) => {
 
 
     // move all physics things and move their three visualizations along with them
-    boxMesh.position.copy(boxBody.position)
-    boxMesh.quaternion.copy(boxBody.quaternion)
+    for(let i = 0; i < threeArray.length; i++){
+        threeArray[i].position.copy(cannonArray[i].position);
+        threeArray[i].quaternion.copy(cannonArray[i].quaternion)
+    }
+
 
     
     overheadCamera.position.set(boxBody.position.x, boxBody.position.y+200, boxBody.position.z);

@@ -9,8 +9,8 @@ class FrustumCulling {
 
         // Turnoff frustumCulled 
         this.scene.traverse((obj) => {obj.frustumCulled = false;
-        obj.boundBox = new Box3().setFromObject(obj);})
-            console.log(this.camera);
+        obj.boundBox = new Box3().setFromObject(obj);
+    })
         this.perpRow = new Array(4);
         this.numNotRendered = 0;
         this.update = function(){
@@ -30,6 +30,9 @@ class FrustumCulling {
         }
 
         this.checkObjInFrustum = function(obj, perpRow){
+            if(!obj.isMesh) {
+                return;
+            }
             let b = obj.boundBox;
             if(!b){
                 obj.boundBox = new Box3();
@@ -74,9 +77,9 @@ class FrustumCulling {
 
             if(inFrust){
                 obj.visible = true;
-                return;
+            } else {
+                obj.visible = false;
             }
-        obj.visible = false;
         }
     }
 
