@@ -14,9 +14,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 import { MakeAudio } from './components/audio';
 import { InputControl } from './components/input';
-import { GamePhysicsScene, GameScene, SceneCustom, TestScene } from './components/scenes';
-import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh, Quaternion, ConvexPolyhedron } from 'cannon-es'
 
+import { GamePhysicsScene,  FrustumCulling, GameScene, SceneCustom, TestScene } from './components/scenes';
+import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh, Quaternion, ConvexPolyhedron } from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger';
 
 
@@ -25,7 +25,10 @@ import CannonDebugger from 'cannon-es-debugger';
 const scene = new GameScene();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
+
+const frustCull = new FrustumCulling(scene, camera);
 const sound = new MakeAudio(camera);
+
 // Set up camera
 camera.position.set(0, 30, -100);
 camera.lookAt(new Vector3(0, 0, 0));
@@ -270,11 +273,11 @@ const onAnimationFrameHandler = (timeStamp) => {
     inputControl.update();
     sound.update();
     // camera.lookAt(scene.target.position);
+
     boxRay = new Ray(boxBody.position.clone().vadd(new Vec3(0, 4, 0)), boxBody.position.clone().vadd(new Vec3(0, -4, 0)))
     // if (boxRay.result != null) console.log(boxRay.result)
     world.fixedStep();
     // draw new ray
-
 
     cannonDebugger.update();
 
@@ -293,7 +296,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     sphereMesh.quaternion.copy(sphereBody.quaternion)
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
-
+    frustCull.update();
     renderer.render(scene, camera);
     scene.update && scene.update(boxBody.position);
     window.requestAnimationFrame(onAnimationFrameHandler);

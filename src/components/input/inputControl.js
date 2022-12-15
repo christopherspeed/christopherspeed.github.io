@@ -79,6 +79,7 @@ class InputControl {
             switch(ele){
                 case 'w':
                     // this.targetLocal.add(new Vector3(0,0,-this.camSpeed));
+
                     this.subject.applyLocalImpulse(new Vec3(0, 0, 25))
                     break;
                 case 's':
