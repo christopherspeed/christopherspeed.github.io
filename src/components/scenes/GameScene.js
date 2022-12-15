@@ -28,7 +28,16 @@ class GameScene extends Scene {
 
         
         const trees = [];
+        for (let i = 0; i < 3; i++) {
+            trees.push(new Tree());
+        }
+        trees[0].position.add(new Vector3(20, 10.1, 44));
+        trees[1].position.add(new Vector3(30, 11.3, 42));
+        trees[2].position.add(new Vector3(33, 13.2, 40));
         
+        for (let i = 0; i < trees.length; i++) {
+            this.add(trees[i]);
+        }
 
         // more trees
         const moreTrees = []
