@@ -30,7 +30,7 @@ class Road {
     translate(x, y, z){
         console.log(x, y, z)
         this.body.position.vadd(new Vec3(x, y, z), this.body.position);
-        this.mesh.position.add(new Vector3(x, y, z));
+        if(this.mesh) this.mesh.position.add(new Vector3(x, y, z));
     }
 
     // change the rotation of both the mesh and the physics body

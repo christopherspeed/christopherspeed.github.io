@@ -129,6 +129,7 @@ class InputControl {
                 case 'arrowleft':
                     break;
                 case 'shift':
+                    v.chassisBody.applyImpulse(new Vec3(0, p.maxForce/2, 0));
                     break
                 default:
                     return;
