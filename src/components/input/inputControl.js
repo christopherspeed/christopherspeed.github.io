@@ -92,14 +92,6 @@ class InputControl {
                 case 'd':
                     this.subject.applyLocalImpulse(new Vec3(-5, 0, 0))
                     break;
-                case 'k':
-                    if (this.audio.guitar.isPlaying) {
-                        this.audio.guitar.pause();
-                    } else {
-                        this.audio.guitar.play();
-                    }
-                case 'l':
-                    this.audio.beep.play();
                 case 'arrowup':
                     break;
                 case 'arrowdown':
@@ -184,6 +176,16 @@ class InputControl {
                     break;
                 case 'arrowleft':
                     if(this.keyMap['arrowright'] == 1) this.keyMap['arrowright'] = 0.5;
+                    break;
+                case 'k':
+                    if (this.audio.guitar.isPlaying) {
+                        this.audio.guitar.pause();
+                    } else {
+                        this.audio.guitar.play();
+                    }
+                    break;
+                case 'l':
+                    this.audio.beep.play();
                     break;
                 default:
                     return;

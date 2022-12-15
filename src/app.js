@@ -22,11 +22,16 @@ import MODEL1 from './components/models/test_environment.gltf'
 import MODEL2 from './components/models/test_road.gltf'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Road from './components/objects/Road/Road';
+import {Menu} from './components/objects/Menu';
 
 
 // Initialize core ThreeJS components
 // const scene = new SeedScene();
+
+
+
 const scene = new GameScene();
+
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
@@ -37,6 +42,11 @@ const sound = new MakeAudio(camera);
 camera.position.set(0, 30, -100);
 camera.lookAt(new Vector3(0, 0, 0));
 
+
+// the menu is just a scene
+const menu = new Menu(window.innerWidth, window.innerHeight, camera.quaternion);
+camera.zoom = 0.1;
+camera.updateProjectionMatrix();
 
 // Set up renderer, canvas, and minor CSS adjustments
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -102,12 +112,7 @@ scene.add(smoke);
 // controls.lookSpeed = 0.01;
 
 // Ew Orbit controls trash
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-controls.enablePan = false;
-controls.minDistance = 4;
-controls.maxDistance = 1000;
-controls.update();
+var controls;
 
 // physics
 const world = new World(
@@ -198,11 +203,11 @@ loader.load(MODEL2, (gltf) => {
 // world.addBody(roads[1].body)
 // scene.add(roads[1].mesh)
 // roads[1].rotate(0, Math.PI, 0)
-
+var sceneR = menu;
 const cannonDebugger = new CannonDebugger(scene, world);
 const onAnimationFrameHandler = (timeStamp) => {
 
-    controls.update();
+    //controls.update();
     inputControl.update();
     sound.update();
     // camera.lookAt(scene.target.position);
@@ -230,7 +235,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
     frustCull.update();
-    renderer.render(scene, camera);
+    renderer.render(sceneR, camera);
     scene.update && scene.update(boxBody.position);
     window.requestAnimationFrame(onAnimationFrameHandler);
 };
@@ -246,10 +251,19 @@ const windowResizeHandler = () => {
 windowResizeHandler();
 window.addEventListener('resize', windowResizeHandler, false);
 
-window.addEventListener('keyup', (event) => {
+window.addEventListener('keydown', (event) => {
     if (event.key == 'p') {
-        console.log('hello')
-        box.applyImpulse(new Vec3(0, 10, 0))
+        console.log(sceneR);
+        sceneR = scene;
+        console.log(sceneR);
+        controls = new OrbitControls(camera, canvas);
+        controls.enableDamping = true;
+        controls.enablePan = false;
+        controls.minDistance = 4;
+        controls.maxDistance = 1000;
+        controls.update();
+        camera.zoom = 1;
+        camera.updateProjectionMatrix();
     }
 })
 
