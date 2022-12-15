@@ -9,6 +9,7 @@
 import { WebGLRenderer, PerspectiveCamera, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SeedScene } from 'scenes';
+import {Text} from 'objects';
 
 // Initialize core ThreeJS components
 
@@ -19,10 +20,10 @@ const renderer = new WebGLRenderer({ antialias: true });
 camera.position.set(6, 3, 10);
 camera.lookAt(new Vector3(0, 0, 0));
 
+
 let direction = new Vector3().subVectors(new Vector3(0, 0, 0), camera.position);
 
 const scene = new SeedScene(direction);
-
 // Set up renderer, canvas, and minor CSS adjustments
 renderer.setPixelRatio(window.devicePixelRatio);
 const canvas = renderer.domElement;
@@ -32,18 +33,18 @@ document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
 // Set up controls
-// const controls = new OrbitControls(camera, canvas);
-// controls.enableDamping = true;
-// controls.enablePan = false;
-// controls.minDistance = 4;
-// controls.maxDistance = 16;
-// controls.update();
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 4;
+controls.maxDistance = 16;
+controls.update();
 
 // Render loop
 const onAnimationFrameHandler = (timeStamp) => {
-    // controls.update();
+    controls.update();
     renderer.render(scene, camera);
-    scene.update && scene.update(timeStamp, camera.quaternion);
+    scene.update && scene.update(timeStamp, camera.quaternion, camera.position);
     window.requestAnimationFrame(onAnimationFrameHandler);
 };
 window.requestAnimationFrame(onAnimationFrameHandler);
@@ -77,7 +78,8 @@ const keypressHandler = (event, timeStamp) => {
         camera.position.add(lookAtVector);
         //debugger;
     }
-    scene.update(timeStamp, camera.quaternion);
+    scene.update(timeStamp, camera.quaternion,camera.position);
+    
     window.requestAnimationFrame(onAnimationFrameHandler);
 };
 
