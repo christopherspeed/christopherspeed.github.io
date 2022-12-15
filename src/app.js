@@ -8,9 +8,9 @@
  * It loads all of the meshes and collision bodies.
  */
 
-
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, OrthographicCamera, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+
 import { SeedScene } from 'scenes';
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -40,13 +40,26 @@ const scene = new GameScene();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
 
+
+const scene2 = new SceneCustom();
+
 const frustCull = new FrustumCulling(scene, camera);
 const sound = new MakeAudio(camera);
 
+
 // Set up camera
-camera.position.set(0, 30, -100);
+camera.position.set(0, 300, -100);
 camera.lookAt(new Vector3(0, 0, 0));
 
+// set up overhead camera
+const overheadCamera = new OrthographicCamera();
+overheadCamera.position.set(0, 10, 100);
+overheadCamera.lookAt(new Vector3(0, 0, 0));
+overheadCamera.zoom = 0.1;
+overheadCamera.updateProjectionMatrix();
+overheadCamera.up.set(0,-1,0);
+
+ 
 
 // Set up renderer, canvas, and minor CSS adjustments
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -221,7 +234,9 @@ function loadRoads(roadModelsToLoad){
     }
 }
 
+
 const cannonDebugger = new CannonDebugger(scene, world);
+
 const onAnimationFrameHandler = (timeStamp) => {
 
     controls.update();
@@ -244,11 +259,56 @@ const onAnimationFrameHandler = (timeStamp) => {
     // move all physics things and move their three visualizations along with them
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
+    
+    overheadCamera.position.set(boxBody.position.x, boxBody.position.y+200, boxBody.position.z);
+    overheadCamera.lookAt(new Vector3(boxBody.position.x, boxBody.position.y+100, boxBody.position.z));
+
+
+    // renderer.setRenderTarget(null);
+    // renderer.clear();
+    // renderer.render(scene, camera);
+    
+    // renderer.setRenderTarget(newBufferTexture);
+    // renderer.render(scene, camera, newBufferTexture);
+    // oldBufferTexture.copy(newBufferTexture);
+
+    // CITATION: adapted from https://jsfiddle.net/f2Lommf5/11653/
+    renderer.setClearColor( 0x000000 );
+  
+    renderer.setViewport( 0, 0, window.innerWidth, window.innerHeight );
+    
+    renderer.render( scene, camera );
+    
+    renderer.setClearColor( 0x333333 );
+    
+    renderer.clearDepth();
+    
+    renderer.setScissorTest( true );
+    const VIEW_X = 16;
+    const VIEW_Y = 16;
+    const VIEW_WIDTH = window.innerHeight / 4;
+    const VIEW_HEIGHT = window.innerHeight / 4;
+    renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
+    renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
+  
+    renderer.render( scene, overheadCamera );
+      
+    renderer.setScissorTest( false );
+    // end citation
+    
+   
+    scene.update && scene.update(timeStamp);
+
     frustCull.update();
-    renderer.render(scene, camera);
+
     scene.update && scene.update(boxBody.position);
+
     window.requestAnimationFrame(onAnimationFrameHandler);
 };
+
+
+
+
 window.requestAnimationFrame(onAnimationFrameHandler);
 
 // Resize Handler
