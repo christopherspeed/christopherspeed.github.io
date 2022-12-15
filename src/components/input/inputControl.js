@@ -106,16 +106,6 @@ class InputControl {
                     break;
                 case 'd':
                     break;
-                case 'k':
-                    if (this.audio.bg.isPlaying) {
-                        this.audio.bg.pause();
-                    } else {
-                        this.audio.bg.play();
-                    }
-                    break;
-                case 'l':
-                    this.audio.beep.play();
-                    break;
                 case 'arrowup':
                     break;
                 case 'arrowdown':
@@ -213,6 +203,16 @@ class InputControl {
                     break;
                 case 'arrowleft':
                     if(this.keyMap['arrowright'] == 1) this.keyMap['arrowright'] = 0.5;
+                    break;
+                case 'k':
+                    if (this.audio.guitar.isPlaying) {
+                        this.audio.guitar.pause();
+                    } else {
+                        this.audio.guitar.play();
+                    }
+                    break;
+                case 'l':
+                    this.audio.beep.play();
                     break;
                 default:
                     return;
