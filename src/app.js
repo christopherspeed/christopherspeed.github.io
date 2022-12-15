@@ -65,7 +65,7 @@ hudCamera.lookAt(new Vector3(0,0,0));
 let miniMap = false;
 let inMenu = true;
 
-const frustCull = new FrustumCulling(scene, camera);
+//const frustCull = new FrustumCulling(scene, camera);
 const sound = new MakeAudio(camera);
 
 
@@ -106,7 +106,11 @@ document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
 
-scene.fog = new FogExp2(new Color(0x1b2e4d), .002);
+//scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+
+scene.fog = new FogExp2(new Color(0x1b2e4d), .01);
+
+
 
 const smokeParticleLocation = require("./components/textures/particlesmoke.png").default;
 const smokeParticleTexture = new TextureLoader().load(smokeParticleLocation);
@@ -329,8 +333,8 @@ const onAnimationFrameHandler = (timeStamp) => {
 
 
     
-    overheadCamera.position.set(boxBody.position.x, boxBody.position.y+200, boxBody.position.z);
-    overheadCamera.lookAt(new Vector3(boxBody.position.x, boxBody.position.y+100, boxBody.position.z));
+    overheadCamera.position.set(boxBody.position.x, boxBody.position.y+100, boxBody.position.z);
+    overheadCamera.lookAt(new Vector3(boxBody.position.x, boxBody.position.y+10, boxBody.position.z));
 
     // GAME OVER!
     if (boxMesh.position.y <= particleSystem.geometry.attributes.position.array[1] + 5 && gamestart) {
@@ -373,7 +377,7 @@ const onAnimationFrameHandler = (timeStamp) => {
         renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
         renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
     
-        renderer.render( sceneR, overheadCamera );
+        renderer.render( scene, overheadCamera );
         
         renderer.setScissorTest( false );
     }
@@ -403,7 +407,7 @@ const onAnimationFrameHandler = (timeStamp) => {
    
     //scene.update && scene.update(timeStamp);
 
-    frustCull.update();
+    //frustCull.update();
 
     //renderer.render(sceneR, camera);
 
