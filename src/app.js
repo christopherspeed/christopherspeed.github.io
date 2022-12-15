@@ -9,10 +9,12 @@
  */
 
 
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2, MeshToonMaterial } from 'three';
-import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { SeedScene } from 'scenes';
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, OrthographicCamera, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
 
+import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+
+import { SeedScene } from 'scenes';
+import { HUD } from './components/objects/HUD';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 import { MakeAudio } from './components/audio';
@@ -25,7 +27,9 @@ import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh
 import CannonDebugger from 'cannon-es-debugger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Road from './components/objects/Road/Road';
+
 import { Tree } from './components/objects/Tree';
+import { Menu } from './components/objects/Menu';
 
 
 // load in shaders
@@ -37,17 +41,51 @@ console.log(fragmentShaderText);
 
 // Initialize core ThreeJS components
 // const scene = new SeedScene();
+
+
+
 const scene = new GameScene();
+
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
+
+const hud = new HUD();
+const hudCamera = new PerspectiveCamera();
+
+hudCamera.position.set(0,20,0);
+hudCamera.lookAt(new Vector3(0,0,0));
+
+let miniMap = false;
+let inMenu = true;
 
 const frustCull = new FrustumCulling(scene, camera);
 const sound = new MakeAudio(camera);
 
+
 // Set up camera
-camera.position.set(0, 30, -100);
+camera.position.set(0, 300, -100);
 camera.lookAt(new Vector3(0, 0, 0));
 
+// set up overhead camera
+const overheadCamera = new OrthographicCamera();
+overheadCamera.position.set(0, 10, 100);
+overheadCamera.lookAt(new Vector3(0, 0, 0));
+overheadCamera.zoom = 0.2;
+overheadCamera.updateProjectionMatrix();
+overheadCamera.up.set(0,-1,0);
+
+/* CITATION: https://stackoverflow.com/questions/63872740/three-js-scaling-a-plane-to-full-screen 
+*/
+const menuCamera = new OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
+//menuCamera.position.set(0, 300, -100);
+//camera.lookAt(new Vector3(0, 0, 0));
+ 
+
+// the menu is just a scene
+//const menu = new Menu(window.innerWidth, window.innerHeight, camera.quaternion);
+const menu = new Menu(2, 2, menuCamera.quaternion);
+camera.zoom = 0.4;
+camera.updateProjectionMatrix();
 
 // Set up renderer, canvas, and minor CSS adjustments
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -80,6 +118,24 @@ const particleVelocities = [];
 for (let i = 0; i < particleCount; i++) {
     particleVelocities[i] = [(Math.random() - .5) / 4, (Math.random() - .5) / 4];  
 }
+
+
+// COLLISION TO END GAME
+
+const smokeBody = new Body({
+    isTrigger: true,
+    type: Body.STATIC,
+    position: new Vec3(0, 0, 0),
+    shape: new Box(new Vector3(100, 1, 100))
+})
+
+function printTrigger(event) {
+    console.log(event)
+    console.log(triggerBody.world)
+    //bodiesToRemove.push(triggerBody) ??
+    smokeBody.removeEventListener("collide", printTrigger)
+}
+smokeBody.addEventListener("collide", printTrigger)
 
 
 
@@ -132,12 +188,8 @@ scene.add(smoke);
 
 // Ew Orbit controls trash
 
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-controls.enablePan = false;
-controls.minDistance = 4;
-controls.maxDistance = 1000;
-controls.update();
+var controls;
+
 
 // physics
 const world = new World(
@@ -147,7 +199,7 @@ const world = new World(
 )
 
 
-const player = new PlayerVehicle(world, [10, 10, 0]);
+const player = new PlayerVehicle(world, [3.1,16, 90]);
 
 /*
 const boxBody = new Body({
@@ -162,8 +214,7 @@ const boxBody = new Body({
 
 })*/
 const boxBody = player.chassis;
-
-boxBody.position.set;
+boxBody.quaternion.setFromEuler(-Math.PI/2, Math.PI/2, 0);
 console.log(boxBody.position)
 
 
@@ -172,7 +223,7 @@ const box_geo = new BoxGeometry(1, 1, 2);
 const boxMesh = new Mesh(box_geo, material);
 
 // scene.add(boxMesh, sphereMesh)
-const inputControl = new InputControl(camera, scene, player, boxMesh, sound);
+const inputControl = new InputControl(camera, scene, player, boxMesh, sound, hud);
 
 scene.add(boxMesh)
 // testing the trigger
@@ -231,23 +282,18 @@ function loadBodies(roadModelsToLoad){
     }
 }
 
-// put a bunch of trees in 
-// for (let v = 0; v < 1000; v+= 5){
-//     for (let u = 0; u < 100; u += 5){
-//         const tree = new Tree();
-//         tree.position.add(new Vector3(-50 +  u, 0,  v));
-//         scene.add(tree)
-//     }
-// }
-const ground = new Mesh(new PlaneGeometry(1000, 1000),new MeshToonMaterial({
-    color: new Color(0x22451d)}))
-ground.lookAt(new Vector3(0, 1, 0))
-scene.add(ground)
 
-//const cannonDebugger = new CannonDebugger(scene, world);
+
+// world.addBody(roads[1].body)
+// scene.add(roads[1].mesh)
+// roads[1].rotate(0, Math.PI, 0)
+var sceneR = menu;
+
+const cannonDebugger = new CannonDebugger(scene, world);
+
 const onAnimationFrameHandler = (timeStamp) => {
 
-    controls.update();
+    //controls.update();
     inputControl.update();
     sound.update();
     world.fixedStep();
@@ -259,19 +305,98 @@ const onAnimationFrameHandler = (timeStamp) => {
 
     // particleSystem.position.y += 0.1;
     updateParticleSystem(particleSystem);
+    smokeBody.position.copy(particleSystem.position);
 
     // if (bodiesToRemove.length > 0) {
     //     world.removeBody(bodiesToRemove[0])
-    // }
+    // } 
+
 
     // move all physics things and move their three visualizations along with them
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
-    //frustCull.update();
-    renderer.render(scene, camera);
+
+    
+    overheadCamera.position.set(boxBody.position.x, boxBody.position.y+200, boxBody.position.z);
+    overheadCamera.lookAt(new Vector3(boxBody.position.x, boxBody.position.y+100, boxBody.position.z));
+
+
+    // renderer.setRenderTarget(null);
+    // renderer.clear();
+    // renderer.render(scene, camera);
+    
+    // renderer.setRenderTarget(newBufferTexture);
+    // renderer.render(scene, camera, newBufferTexture);
+    // oldBufferTexture.copy(newBufferTexture);
+
+    // CITATION: adapted from https://jsfiddle.net/f2Lommf5/11653/
+    renderer.setClearColor( 0x000000 );
+  
+    renderer.setViewport( 0, 0, window.innerWidth, window.innerHeight );
+    
+    if(!inMenu){
+        renderer.render(sceneR, camera );
+    } else {
+        renderer.render(sceneR, menuCamera);
+    }
+    
+
+    if(miniMap){    
+        renderer.setClearColor( 0x333333 );
+        
+        renderer.clearDepth();
+        
+        renderer.setScissorTest( true );
+        const VIEW_X = 16;
+        const VIEW_Y = 16;
+        const VIEW_WIDTH = window.innerHeight / 4;
+        const VIEW_HEIGHT = window.innerHeight / 4;
+        renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
+        renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
+    
+        renderer.render( sceneR, overheadCamera );
+        
+        renderer.setScissorTest( false );
+    }
+
+    if(miniMap){    
+        renderer.setClearColor( 0x333333 );
+        
+        renderer.clearDepth();
+        
+        renderer.setScissorTest( true );
+        const VIEW_X = 16;
+        const VIEW_Y = 300;
+        const VIEW_WIDTH = window.innerHeight / 4;
+        const VIEW_HEIGHT = window.innerHeight / 4;
+        renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
+        renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
+    
+        renderer.render( hud, menuCamera );
+        
+        renderer.setScissorTest( false );
+    }
+
+    
+    // end citation
+    
+   
+    //scene.update && scene.update(timeStamp);
+
+    frustCull.update();
+
+    //renderer.render(sceneR, camera);
+
+
+
     scene.update && scene.update(boxBody.position);
+
     window.requestAnimationFrame(onAnimationFrameHandler);
 };
+
+
+
+
 window.requestAnimationFrame(onAnimationFrameHandler);
 
 // Resize Handler
@@ -284,11 +409,24 @@ const windowResizeHandler = () => {
 windowResizeHandler();
 window.addEventListener('resize', windowResizeHandler, false);
 
-window.addEventListener('keyup', (event) => {
+window.addEventListener('keydown', (event) => {
     if (event.key == 'p') {
-        console.log('hello')
-        box.applyImpulse(new Vec3(0, 10, 0))
+        console.log(sceneR);
+        sceneR = scene;
+        console.log(sceneR);
+        
+        controls = new OrbitControls(camera, canvas);
+        controls.enableDamping = true;
+        controls.enablePan = false;
+        controls.minDistance = 4;
+        controls.maxDistance = 1000;
+        controls.update();
+        camera.zoom = 1;
+        camera.updateProjectionMatrix();
+        miniMap = true;
+        inMenu = false;
     }
+
 })
 
 
@@ -405,7 +543,7 @@ function updateParticleSystem(particleSystem) {
             particleVelocities[i][0] *= -1;
             particleVelocities[i][0] += (Math.random() - .5) / 8;
         }
-        vertices[ i * 3 + 1 ] += .1; // y
+        vertices[ i * 3 + 1 ] += .001; // y
         vertices[ i * 3 + 2 ] += particleVelocities[i][1];
         if (Math.abs(vertices[i * 3 + 2]) > 70) {
             // reverses with slight nudge of randomness
