@@ -83,10 +83,10 @@ class InputControl {
                     this.subject.applyLocalImpulse(new Vec3(0, 0, -5))
                     break;
                 case 'a':
-                    this.subject.applyTorque(new Vec3(0, 20, 0));
+                    this.subject.applyLocalImpulse(new Vec3(5, 0, 0))
                     break;
                 case 'd':
-                    this.subject.applyTorque(new Vec3(0, -20, 0));
+                    this.subject.applyLocalImpulse(new Vec3(-5, 0, 0))
                     break;
                 case 'arrowup':
                     break;
