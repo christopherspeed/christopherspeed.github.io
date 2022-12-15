@@ -106,25 +106,6 @@ for (let i = 0; i < particleCount; i++) {
 }
 
 
-// COLLISION TO END GAME
-
-// const smokeBody = new Body({
-//     isTrigger: true,
-//     type: Body.STATIC,
-//     position: new Vec3(0, 0, 0),
-//     shape: new Box(new Vector3(100, 1, 100))
-// })
-
-// function printTrigger(event) {
-//     console.log(event)
-//     console.log(triggerBody.world)
-//     //bodiesToRemove.push(triggerBody) ??
-//     smokeBody.removeEventListener("collide", printTrigger)
-// }
-// smokeBody.addEventListener("collide", printTrigger)
-
-
-
 
 // NOT PROPERLY IMPLEMENTED YET, NEEDS TO BE UNCOMMENTED/TWEAKED.
 // UNCOMMENT LINES 230-231 WHEN WORKING
@@ -176,7 +157,6 @@ for (let i = 0; i < particleCount; i++) {
 // Ew Orbit controls trash
 
 var controls;
-
 
 // physics
 const world = new World(
@@ -404,9 +384,9 @@ function createParticleSystem(particleCount) {
    // Create the vertices and add them to the particles geometry
     for (var p = 0; p < particleCount; p++) {
         // This will create all the vertices in a range of -50 to 50 in x and -20 to 80 in z
-        var x = Math.random() * 200 - 100;
+        var x = Math.random() * 500 - 250;
         var y = 0;
-        var z = Math.random() * 100 - 20;
+        var z = Math.random() * 500 - 250;
     
         // Create the vertex
         var particle = new Vector3(x, y, z);
@@ -483,25 +463,33 @@ function updateParticleSystem(particleSystem) {
     let vertices = particleSystem.geometry.attributes.position.array;
     const numVertices = particleSystem.geometry.attributes.position.count;
 
-    const pull = .00001; // tweak as necessary
+    const pull = .000001; // tweak as necessary
     
 
     // updates particle positions based on velocity
     for (let i = 0; i < numVertices; i++) {
         vertices[ i * 3 + 0 ] += particleVelocities[i][0];
-
-        if (Math.abs(vertices[i * 3 + 0]) > 100) {
+        const c = Math.abs(vertices[i * 3 + 0]);
+        if (c > 300) {
             // reverses with slight nudge of randomness
             particleVelocities[i][0] *= -1;
             particleVelocities[i][0] += (Math.random() - .5) / 8;
         }
+
+
         vertices[ i * 3 + 1 ] += .01; // y
         vertices[ i * 3 + 2 ] += particleVelocities[i][1];
-        if (Math.abs(vertices[i * 3 + 2]) > 100) {
+        const d = Math.abs(vertices[i * 3 + 2]);
+        if (d > 300) {
             // reverses with slight nudge of randomness
             particleVelocities[i][1] *= -1;
             particleVelocities[i][1] += (Math.random() - .5) / 8;
         }
+        if (c < 20 && d < 20) {
+            vertices[ i * 3 + 0 ] = Math.random() * 500 - 250; //resets x
+            vertices[ i * 3 + 2 ] = Math.random() * 500 - 250; //resets z
+        }
+
     }
     // updates particle velocities through interactions with 
     // random subset of neighbors
