@@ -9,7 +9,7 @@
 import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide } from 'three';
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SeedScene } from 'scenes';
-import { OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 import { InputControl } from './components/input';
 import { GamePhysicsScene, GameScene, SceneCustom, TestScene } from './components/scenes';
@@ -163,15 +163,15 @@ world.addBody(boxBody)
 
 
 // load all of the physics colliders
-const gamePhysics = new GamePhysicsScene()
-const physicsBodies = gamePhysics.roadBodies
-const environmentalBodies = gamePhysics.environBodies;
-for (let i = 0; i < physicsBodies.length; i++) {
-    world.addBody(physicsBodies[i])
-}
-for (let i = 0; i < environmentalBodies.length; i++) {
-    world.addBody(environmentalBodies[i])
-}
+// const gamePhysics = new GamePhysicsScene()
+// const physicsBodies = gamePhysics.roadBodies
+// const environmentalBodies = gamePhysics.environBodies;
+// for (let i = 0; i < physicsBodies.length; i++) {
+//     world.addBody(physicsBodies[i])
+// }
+// for (let i = 0; i < environmentalBodies.length; i++) {
+//     world.addBody(environmentalBodies[i])
+// }
 
 // testing the trigger
 const triggerBody = new Body({
@@ -196,73 +196,16 @@ const bodiesToRemove = []
 // Render loop
 let bodyToRemove = 0
 let boxRay = new Ray(boxBody.position, boxBody.position.vadd(new Vec3(0, -1, 0)))
+const roads = scene.roads;
 
 
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import MODEL from './test_environment.gltf'
-const loader = new GLTFLoader()
-loader.load(MODEL, (gltf) => {
-    console.log(gltf)
-    console.log(gltf.scene)
-    console.log(gltf.scene.children[0].geometry)
-    const triMesh = new Trimesh(
-        gltf.scene.children[0].geometry.attributes.position.array,
-        gltf.scene.children[0].geometry.index.array);
-    const triBody = new Body({
-        shape: triMesh,
-        material: new Material({
-            friction: 0
-        }),
-        quaternion: new Quaternion().setFromEuler(0, Math.PI, 0)
-        
-    })
-    // let newGeo = BufferGeometryUtils.mergeVertices(gltf.scene.children[0].geometry);
-    // newGeo = new ConvexGeometry(newGeo.v);
-    // const convexHull = new ConvexPolyhedron(
-    //         newGeo.attributes.position.array,
-    //         );
-    // const convexBody = new Body({
-    //     shape: convexpolyhedron,
-    //     material: new Material({
-    //         friction: 0
-    //     }),
-    //     quaternion: new Quaternion().setFromEuler(0, Math.PI, 0)
-        
-    // })
-    const triBody2 = new Body({
-        shape: triMesh,
-        material: new Material({
-            friction: 0
-        }),
-        quaternion: new Quaternion().setFromEuler(0, Math.PI + .2, 0),
-        position: new Vec3(3, 2, 15)
-        
-    })
+// console.log(roads[0])
+// world.addBody(roads[0].body)
+// scene.add(roads[0].mesh)
 
-    
-    world.addBody(triBody)
-    // world.addBody(triBody2)
-    // world.addBody(convexBody);
-    const ramp = new Mesh(gltf.scene.children[0].geometry, new MeshBasicMaterial({
-        side: DoubleSide
-    }))
-    const ramp2 = new Mesh(gltf.scene.children[0].geometry, new MeshBasicMaterial({
-        side: DoubleSide
-    }))
-    ramp.rotateY(Math.PI)
-    // ramp2.rotateY(Math.PI + .2);
-    // ramp2.position.add(new Vector3(3, 2, 15))
-    scene.add(ramp)
-});
-
-
-
-/**
- * Hoped-for pipeline
- * 1. Load in a gltf
- * 2. Generate both the colliders and the threejs mesh 
-*/
-
+// world.addBody(roads[1].body)
+// scene.add(roads[1].mesh)
+// roads[1].rotate(0, Math.PI, 0)
 
 const cannonDebugger = new CannonDebugger(scene, world);
 const onAnimationFrameHandler = (timeStamp) => {
