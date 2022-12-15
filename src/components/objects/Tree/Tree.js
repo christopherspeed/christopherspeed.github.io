@@ -7,13 +7,13 @@ const texture = new TextureLoader().load(pineURL);
 const texMaterial = new MeshToonMaterial({map: texture});
 
 class Tree extends Group {
-    constructor(parent){
+    constructor(x, y, z){
         // Call parent Group() constructor
         super();
     
         this.tree = undefined;
         this.lowrestree = undefined;
-
+        this.name = "tree";
 
         // Load object
         const loader = new GLTFLoader();
@@ -32,8 +32,10 @@ class Tree extends Group {
             temp.add(gltf.scene);
             
         }
+        
 
         loader.load(TreeMODEL, loadTree);
+        
 
         function loadLowResTree (gltf) {
             gltf.scene.traverse(function(child) {
@@ -52,6 +54,7 @@ class Tree extends Group {
         
         loader.load(LowResTreeMODEL, loadLowResTree);
         
+        
 
         
         
@@ -64,7 +67,7 @@ class Tree extends Group {
         if(this.tree != undefined && this.lowrestree != undefined) {
             
             if(this.tree.isObject3D && this.lowrestree.isObject3D) {
-                if (dist.length() > 20) {
+                if (dist.length() > 40) {
                     this.tree.visible = false;
                     this.lowrestree.visible = true;
                 } else {
