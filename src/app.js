@@ -9,7 +9,7 @@
  */
 
 
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, OrthographicCamera, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, OrthographicCamera, ShaderMaterial, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2, MeshToonMaterial } from 'three';
 
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
@@ -365,10 +365,11 @@ const onAnimationFrameHandler = (timeStamp) => {
         renderer.clearDepth();
         
         renderer.setScissorTest( true );
-        const VIEW_X = 16;
-        const VIEW_Y = 300;
+        
+        const VIEW_Y = 16;
         const VIEW_WIDTH = window.innerHeight / 4;
         const VIEW_HEIGHT = window.innerHeight / 4;
+        const VIEW_X = window.innerWidth - VIEW_WIDTH - 16;
         renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
         renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
     
