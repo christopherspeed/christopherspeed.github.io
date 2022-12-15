@@ -6,22 +6,28 @@
  * handles window resizes.
  *
  */
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry} from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { SeedScene } from 'scenes';
 
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
+import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { SeedScene } from 'scenes';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+
+import { MakeAudio } from './components/audio';
 import { InputControl } from './components/input';
-import { FrustumCulling, SceneCustom, TestScene } from './components/scenes';
-import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder } from 'cannon-es'
+
+import { GamePhysicsScene,  FrustumCulling, GameScene, SceneCustom, TestScene } from './components/scenes';
+import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh, Quaternion, ConvexPolyhedron } from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger';
 
 
 // Initialize core ThreeJS components
 // const scene = new SeedScene();
-const scene = new SceneCustom();
+const scene = new GameScene();
 const camera = new PerspectiveCamera();
 const renderer = new WebGLRenderer({ antialias: true });
+
 const frustCull = new FrustumCulling(scene, camera);
+const sound = new MakeAudio(camera);
 
 // Set up camera
 camera.position.set(0, 30, -100);
@@ -36,46 +42,94 @@ document.body.style.margin = 0; // Removes margin around page
 document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
-//Ew Orbit controls trash
+scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+
+/*
+// NOT PROPERLY IMPLEMENTED YET, NEEDS TO BE UNCOMMENTED/TWEAKED.
+// UNCOMMENT LINES 230-231 WHEN WORKING
+// SMOKE TEXTURE
+// adapted from: https://www.youtube.com/watch?v=otavCmIuEhY
+
+const smokeTextureLocation = require("./components/textures/Smoke15Frames.png").default;
+const smokeTexture = new TextureLoader().load(smokeTextureLocation);
+smokeTexture.encoding = sRGBEncoding; // default is linear
+const smokeGeometry = new PlaneGeometry(100, 100);
+
+// LambertMaterial for nonshiny surfaces
+const smokeMaterial = new MeshLambertMaterial( {
+    color: 0x0000ff, // white for debugging
+    map: smokeTexture,
+    emissive: 0x222222,
+    opacity: .9,
+    transparent: true
+});
+
+const smoke = new Group();
+
+for (let i = 0; i < 20; i++) {
+    // can tweak i for more or less layers
+    let smokeElement = new Mesh(smokeGeometry, smokeMaterial);
+    smokeElement.scale.set(2,2,2);
+
+    // position textures at random xy positions
+    smokeElement.position.set(Math.random() * 200 - 50, Math.random() * 200 - 50, -20);
+    // probably have to adjust z
+
+    // set smoke texture rotations to random amounts on z axis
+    smokeElement.rotateOnAxis.z = Math.random * 360;
+    smoke.add(smokeElement);
+
+    console.log(smokeElement.visible);
+
+}
+scene.add(smoke);
+*/
+
 // Set up controls
+// ????
+// const controls = new FirstPersonControls( camera, canvas );
+// controls.movementSpeed = 150;
+// controls.lookSpeed = 0.01;
+
+// Ew Orbit controls trash
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
 controls.minDistance = 4;
-controls.maxDistance = 100;
+controls.maxDistance = 1000;
 controls.update();
 
 // physics
 const world = new World(
     {
-        gravity: new Vec3(0, -9.82 * 1.5 , 0),
+        gravity: new Vec3(0, -9.82 * 1.5, 0),
     }
 )
 
-const cannonDebugger = new CannonDebugger(scene, world);
+
 
 const radius = 2
 const sphereBody = new Body({
     mass: 5,
     shape: new Sphere(radius),
     angularDamping: 0.4,
-    
+
 })
-sphereBody.position.set(2, 5, 20)
+sphereBody.position.set(0, 5, 0)
 
 const boxBody = new Body({
-    shape: new Box(new Vec3(.5, .5, 1)),
+    shape: new Sphere(1),
     mass: 100,
     linearDamping: 0.8,
     angularDamping: 0.8,
     material: new Material({
-        friction: 0
-    })
+        friction: 0.5
+    }),
+    fixedRotation: true
 })
-boxBody.position.set(0, 15.5, -20)
+boxBody.position.set(20, 120, -140)
 
-
-const inputControl = new InputControl(camera, scene, boxBody);
+const inputControl = new InputControl(camera, scene, boxBody, sound);
 console.log(boxBody.position)
 
 const geometry = new SphereGeometry(radius)
@@ -83,24 +137,25 @@ const material = new MeshNormalMaterial()
 const sphereMesh = new Mesh(geometry, material)
 const box_geo = new BoxGeometry(1, 1, 2);
 const boxMesh = new Mesh(box_geo, material);
-scene.add(boxMesh, sphereMesh)
+// scene.add(boxMesh, sphereMesh)
+scene.add(boxMesh)
 const groundBody = new Body({
     type: Body.STATIC,
     shape: new Plane(),
     material: new Material({
         friction: 0
     })
-  })
+})
 groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0) // make it face up
-world.addBody(groundBody)
+// world.addBody(groundBody)
 const angledGroundBody = new Body({
     type: Body.STATIC,
     shape: new Plane(),
     material: new Material({
         friction: 0
     })
-  })
-angledGroundBody.quaternion.setFromEuler(Math.PI, 0, 0) 
+})
+angledGroundBody.quaternion.setFromEuler(Math.PI, 0, 0)
 angledGroundBody.position.set(0, 0, 50)
 // second boundary
 const angledGroundBody2 = new Body({
@@ -109,8 +164,8 @@ const angledGroundBody2 = new Body({
     material: new Material({
         friction: 0
     })
-  })
-angledGroundBody2.quaternion.setFromEuler(-  2 * Math.PI  , 0, 0) 
+})
+angledGroundBody2.quaternion.setFromEuler(-  2 * Math.PI, 0, 0)
 angledGroundBody2.position.set(0, 0, -50)
 // third boundary
 const angledGroundBody3 = new Body({
@@ -119,8 +174,8 @@ const angledGroundBody3 = new Body({
     material: new Material({
         friction: 0
     })
-  })
-angledGroundBody3.quaternion.setFromEuler(0, - Math.PI / 2, 0) 
+})
+angledGroundBody3.quaternion.setFromEuler(0, - Math.PI / 2, 0)
 angledGroundBody3.position.set(50, 0, 0)
 // fourth boundary
 const angledGroundBody4 = new Body({
@@ -129,57 +184,62 @@ const angledGroundBody4 = new Body({
     material: new Material({
         friction: 0
     })
-  })
-angledGroundBody4.quaternion.setFromEuler(0, Math.PI / 2, 0) 
+})
+angledGroundBody4.quaternion.setFromEuler(0, Math.PI / 2, 0)
 angledGroundBody4.position.set(-50, 0, 0)
-world.addBody(angledGroundBody)
-world.addBody(angledGroundBody2)
-world.addBody(angledGroundBody3)
-world.addBody(angledGroundBody4)
+// world.addBody(angledGroundBody)
+// world.addBody(angledGroundBody2)
+// world.addBody(angledGroundBody3)
+// world.addBody(angledGroundBody4)
 // world.addBody(sphereBody);
 world.addBody(boxBody)
 
-const bump = new Body({
-    type: Body.STATIC,
-    shape: new Box(new Vec3(1, 5, 5)),
-    material: new Material({
-        friction: 0
-    })
-})
-bump.position.set(0, -0.5, 15)
-bump.quaternion.setFromEuler(- Math.PI / 6, 0, Math.PI / 2)
-const bump2 = new Body({
-    type: Body.STATIC,
-    shape: new Box(new Vec3(1, 5, 5)),
-    material: new Material({
-        friction: 0
-    })
-})
-bump2.position.set(0, -0.5, 30)
-bump2.quaternion.setFromEuler(Math.PI / 6, 0, Math.PI / 2)
-world.addBody(bump2)
-world.addBody(bump)
+// const bump = new Body({
+//     type: Body.STATIC,
+//     shape: new Box(new Vec3(1, 5, 5)),
+//     material: new Material({
+//         friction: 0
+//     })
+// })
+// bump.position.set(0, -0.5, 15)
+// bump.quaternion.setFromEuler(- Math.PI / 6, 0, Math.PI / 2)
+// const bump2 = new Body({
+//     type: Body.STATIC,
+//     shape: new Box(new Vec3(1, 5, 5)),
+//     material: new Material({
+//         friction: 0
+//     })
+// })
+// bump2.position.set(0, -0.5, 30)
+// bump2.quaternion.setFromEuler(Math.PI / 6, 0, Math.PI / 2)
+// world.addBody(bump2) 
+// world.addBody(bump)
 
-const testBody = new Body({
-    type: Body.STATIC,
-    shape: new Cylinder(10, 20, 10, 20),
-    material: new Material({
-        friction: 0
-    })
-})
-testBody.position.set(0, 5, -20)
-world.addBody(testBody)
 
+// load all of the physics colliders
+// const gamePhysics = new GamePhysicsScene()
+// const physicsBodies = gamePhysics.roadBodies
+// const environmentalBodies = gamePhysics.environBodies;
+// for (let i = 0; i < physicsBodies.length; i++) {
+//     world.addBody(physicsBodies[i])
+// }
+// for (let i = 0; i < environmentalBodies.length; i++) {
+//     world.addBody(environmentalBodies[i])
+// }
 
 // testing the trigger
 const triggerBody = new Body({
     isTrigger: true,
     type: Body.STATIC,
-    position: new Vec3(0, 11, -10),
+    position: new Vec3(0, 1.5, -10),
     shape: new Box(new Vec3(4, 1, 2),)
 })
 
-function printTrigger(event){
+// testBody.position.set(0, 5, -30)
+// world.addBody(testBody)
+
+
+function printTrigger(event) {
     console.log(event)
     console.log(triggerBody.world)
     bodiesToRemove.push(triggerBody)
@@ -188,30 +248,57 @@ function printTrigger(event){
 }
 triggerBody.addEventListener("collide", printTrigger)
 const bodiesToRemove = []
-world.addBody(triggerBody)
+// world.addBody(triggerBody)
+
 //window.addEventListener('keydown', testMove);
 // document.body.style.cursor = 'none';
 // Render loop
 let bodyToRemove = 0
+let boxRay = new Ray(boxBody.position, boxBody.position.vadd(new Vec3(0, -1, 0)))
+const roads = scene.roads;
+
+
+// console.log(roads[0])
+// world.addBody(roads[0].body)
+// scene.add(roads[0].mesh)
+
+// world.addBody(roads[1].body)
+// scene.add(roads[1].mesh)
+// roads[1].rotate(0, Math.PI, 0)
+
+const cannonDebugger = new CannonDebugger(scene, world);
 const onAnimationFrameHandler = (timeStamp) => {
 
     controls.update();
     inputControl.update();
+    sound.update();
     // camera.lookAt(scene.target.position);
-    world.fixedStep(1/60, 10);
+
+    boxRay = new Ray(boxBody.position.clone().vadd(new Vec3(0, 4, 0)), boxBody.position.clone().vadd(new Vec3(0, -4, 0)))
+    // if (boxRay.result != null) console.log(boxRay.result)
+    world.fixedStep();
+    // draw new ray
+
     cannonDebugger.update();
-    if (bodiesToRemove.length > 0){
+
+    // smoke.rotation.z += 1; UNCOMMENT WHEN WE GET SMOKE WORKING
+    // smoke.position.z += 1;
+    
+    
+
+    if (bodiesToRemove.length > 0) {
         world.removeBody(bodiesToRemove[0])
     }
     // move all physics things and move their three visualizations along with them
-    
+
+
     sphereMesh.position.copy(sphereBody.position)
     sphereMesh.quaternion.copy(sphereBody.quaternion)
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
     frustCull.update();
     renderer.render(scene, camera);
-    scene.update && scene.update(timeStamp);
+    scene.update && scene.update(boxBody.position);
     window.requestAnimationFrame(onAnimationFrameHandler);
 };
 window.requestAnimationFrame(onAnimationFrameHandler);
@@ -233,9 +320,11 @@ window.addEventListener('keyup', (event) => {
 })
 
 
+
+
 // window.addEventListener('mousemove', testMouseStuff);
 
-function testMouseStuff(event){
+function testMouseStuff(event) {
     console.log(event.movementX, event.movementY)
     camera.rotateY(- event.movementX * 0.001)
     camera.rotateX(- event.movementY * 0.001)
