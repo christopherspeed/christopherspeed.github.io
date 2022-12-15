@@ -8,10 +8,12 @@ class PlayerVehicle {
 
 
     // Build the car chassis
+
+    const mass = 2;
     const w = 1.0
-    const axisWidth = 1.0
+    const axisWidth = 1.5
     const chassisShape = new Box(new Vec3(2*w,0.5, axisWidth ))
-    const chassisBody = new Body({ mass: 1.0})
+    const chassisBody = new Body({ mass: mass})
     const centerOfMassAdjust = new Vec3(0, -0.5, 0)
     //chassisBody.collisionResponse = false;
     chassisBody.addShape(chassisShape)
@@ -22,7 +24,7 @@ class PlayerVehicle {
       chassisBody,
     })
 
-    const mass = 2;
+  
 
     const wheelShape = new Sphere(0.5)
     const wheelMaterial = new Material('wheel')
@@ -77,12 +79,14 @@ class PlayerVehicle {
     this.chassis = chassisBody;
 
     this.param = {
-        maxSteerVal: Math.PI / 16 ,
-        maxForce: 20,
+        maxSteerVal: Math.PI / 32 ,
+        maxForce: 15,
         brakeForce: 1000000
     }
 
     }
+
+   
 
 }
 

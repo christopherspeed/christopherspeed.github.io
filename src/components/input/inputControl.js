@@ -67,9 +67,8 @@ class InputControl {
         this.update = function(){
             Object.keys(this.keyMap).forEach(handleKeyUpdate.bind(this));
             // Slowly lerp towards target position
-            
-            //this.camera.position.copy(this.subjectMesh.position);
-            //lerpTowardTarget.bind(this)();
+            this.camera.position.copy(this.subjectMesh.position);
+            lerpTowardTarget.bind(this)();
 
         }
 
@@ -99,8 +98,8 @@ class InputControl {
                     break;
                 case 's':
                     // this.targetLocal.add(new Vector3(0,0,this.camSpeed));
-                    v.applyWheelForce(-p.maxForce / 2, 2)
-                    v.applyWheelForce(p.maxForce / 2, 3)
+                    v.applyWheelForce(-p.maxForce, 2)
+                    v.applyWheelForce(p.maxForce, 3)
                     break;
                 case 'a':
                     break;
@@ -134,7 +133,7 @@ class InputControl {
         function calculateTarget(lrAngle, udAngle){
             const target1 = new Vector3(Math.sin(lrAngle) , 0, Math.cos(lrAngle));
             const target2 = new Vector3(0, Math.sin(udAngle), Math.cos(udAngle));
-            return target1.add(target2).divideScalar(2).normalize();
+            return target1.add(target2).divideScalar(2).normalize().applyAxisAngle(new Vector3(0,1,0), -Math.PI/2);
         }
 
         // Slowly lerp towards target local position. 
