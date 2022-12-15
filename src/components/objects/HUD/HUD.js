@@ -37,7 +37,7 @@ class HUD extends Scene {
         // Call parent Group() constructor
         super();
 
-        this.background = new Color(0x1b2e4d)
+        this.background = new Color(0x101010);
         const lights = new BasicLights();
         this.add(lights);
         this.ground_toon_mat = new MeshBasicMaterial()
@@ -59,21 +59,21 @@ class HUD extends Scene {
 
         
         this.a = new Mesh(ground_geo, this.aMat);
-        this.a.position.set(-0.6,0,0);
+        this.a.position.set(-0.6,-0.3,0);
        // ground.lookAt(new Vector3(0, 1, 0));
         //ground.setRotationFromQuaternion(quaternion);
         this.add(this.a);
 
         this.d = new Mesh(ground_geo, this.dMat);
-        this.d.position.set(0.6,0,0);
+        this.d.position.set(0.6,-0.3,0);
         this.add(this.d);
 
         this.w = new Mesh(ground_geo, this.wMat);
-        this.w.position.set(0,0.6,0);
+        this.w.position.set(0,0.3,0);
         this.add(this.w);
 
         this.s = new Mesh(ground_geo, this.sMat);
-        this.s.position.set(0,0,0);
+        this.s.position.set(0,-0.3,0);
         this.add(this.s);
         
     }

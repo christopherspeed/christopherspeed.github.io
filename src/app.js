@@ -350,10 +350,11 @@ const onAnimationFrameHandler = (timeStamp) => {
         renderer.clearDepth();
         
         renderer.setScissorTest( true );
-        const VIEW_X = 16;
-        const VIEW_Y = 300;
+        
+        const VIEW_Y = 16;
         const VIEW_WIDTH = window.innerHeight / 4;
         const VIEW_HEIGHT = window.innerHeight / 4;
+        const VIEW_X = window.innerWidth-16-VIEW_WIDTH;
         renderer.setScissor( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
         renderer.setViewport( VIEW_X, VIEW_Y, VIEW_WIDTH, VIEW_HEIGHT );
     
