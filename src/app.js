@@ -39,6 +39,9 @@ document.body.appendChild(canvas);
 
 scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
 
+/*
+// NOT PROPERLY IMPLEMENTED YET, NEEDS TO BE UNCOMMENTED/TWEAKED.
+// UNCOMMENT LINES 230-231 WHEN WORKING
 // SMOKE TEXTURE
 // adapted from: https://www.youtube.com/watch?v=otavCmIuEhY
 const smokeTextureLocation = require("./components/textures/Smoke15Frames.png").default;
@@ -74,7 +77,7 @@ for (let i = 0; i < 20; i++) {
 
 }
 scene.add(smoke);
-
+*/
 
 // Set up controls
 // ????
@@ -224,8 +227,8 @@ const onAnimationFrameHandler = (timeStamp) => {
     // camera.lookAt(scene.target.position);
     world.fixedStep();
     cannonDebugger.update();
-    smoke.rotation.z += 1;
-    smoke.position.z += 1;
+    // smoke.rotation.z += 1; UNCOMMENT WHEN WE GET SMOKE WORKING
+    // smoke.position.z += 1;
     
     
     sphereMesh.position.copy(sphereBody.position)
