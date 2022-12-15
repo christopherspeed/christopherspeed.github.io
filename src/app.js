@@ -7,7 +7,7 @@
  *
  */
 
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SeedScene } from 'scenes';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -45,6 +45,7 @@ scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
 // UNCOMMENT LINES 230-231 WHEN WORKING
 // SMOKE TEXTURE
 // adapted from: https://www.youtube.com/watch?v=otavCmIuEhY
+
 const smokeTextureLocation = require("./components/textures/Smoke15Frames.png").default;
 const smokeTexture = new TextureLoader().load(smokeTextureLocation);
 smokeTexture.encoding = sRGBEncoding; // default is linear
@@ -52,10 +53,10 @@ const smokeGeometry = new PlaneGeometry(100, 100);
 
 // LambertMaterial for nonshiny surfaces
 const smokeMaterial = new MeshLambertMaterial( {
-    color: 0xffffff, // white for debugging
+    color: 0x0000ff, // white for debugging
     map: smokeTexture,
     emissive: 0x222222,
-    opacity: .15,
+    opacity: .9,
     transparent: true
 });
 
