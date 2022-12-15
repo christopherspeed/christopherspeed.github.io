@@ -201,21 +201,21 @@ const mountainMat = new MeshBasicMaterial({
 })
 // load in the road models from the scene file list
 const models = scene.models;
-
+console.log(models)
 const loader = new GLTFLoader()
-loadRoads(models)
+loadBodies(models)
 
-function loadRoads(roadModelsToLoad){
+function loadBodies(roadModelsToLoad){
     for (let i = 0; i < roadModelsToLoad.length; i++) {
         loader.load(roadModelsToLoad[i], (gltf) => {
-            let mat;
-            if (i == 1){
-                mat = mountainMat;
-            } else mat = testMat;
-            const road = new Road(gltf, mat);
+            // let mat;
+            // if (i == 1){
+            //     mat = mountainMat;
+            // } else mat = testMat;
+            const road = new Road(gltf, testMat);
             world.addBody(road.body);
             scene.add(road.mesh);
-            if (i == 1) road.translate(0, 0, -10)
+            if (i == 1 || i == 2) road.translate(0, 0, 10)
             scene.roads.push(road);
         })
     }
@@ -244,7 +244,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     // move all physics things and move their three visualizations along with them
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
-    frustCull.update();
+    //frustCull.update();
     renderer.render(scene, camera);
     scene.update && scene.update(boxBody.position);
     window.requestAnimationFrame(onAnimationFrameHandler);
