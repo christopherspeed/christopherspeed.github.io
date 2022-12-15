@@ -5,21 +5,18 @@
  * Scene and Camera. It also starts the render loop and
  * handles window resizes.
  *
+ * It loads all of the meshes and collision bodies.
  */
 
 import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
-import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { SeedScene } from 'scenes';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 import { MakeAudio } from './components/audio';
 import { InputControl } from './components/input';
 
-import { GamePhysicsScene,  FrustumCulling, GameScene, SceneCustom, TestScene } from './components/scenes';
+import { FrustumCulling, GameScene } from './components/scenes';
 import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh, Quaternion, ConvexPolyhedron } from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger';
-import MODEL1 from './components/models/test_environment.gltf'
-import MODEL2 from './components/models/test_road.gltf'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Road from './components/objects/Road/Road';
 
@@ -46,7 +43,7 @@ document.body.style.margin = 0; // Removes margin around page
 document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
-scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+// scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
 
 /*
 // NOT PROPERLY IMPLEMENTED YET, NEEDS TO BE UNCOMMENTED/TWEAKED.
@@ -110,15 +107,6 @@ const world = new World(
     }
 )
 
-const radius = 2
-const sphereBody = new Body({
-    mass: 5,
-    shape: new Sphere(radius),
-    angularDamping: 0.4,
-
-})
-sphereBody.position.set(0, 5, 0)
-
 const boxBody = new Body({
     shape: new Sphere(1),
     mass: 100,
@@ -129,69 +117,62 @@ const boxBody = new Body({
     }),
     fixedRotation: true
 })
-boxBody.position.set(-20, 120, 140)
+boxBody.position.set(-20, 120, 0)
 
 const inputControl = new InputControl(camera, scene, boxBody, sound);
-console.log(boxBody.position)
 
-const geometry = new SphereGeometry(radius)
 const material = new MeshNormalMaterial()
-const sphereMesh = new Mesh(geometry, material)
 const box_geo = new BoxGeometry(1, 1, 2);
 const boxMesh = new Mesh(box_geo, material);
-// scene.add(boxMesh, sphereMesh)
 scene.add(boxMesh)
 
 world.addBody(boxBody)
 // testing the trigger
-const triggerBody = new Body({
-    isTrigger: true,
-    type: Body.STATIC,
-    position: new Vec3(0, 1.5, -10),
-    shape: new Box(new Vec3(4, 1, 2),)
-})
+// const triggerBody = new Body({
+//     isTrigger: true,
+//     type: Body.STATIC,
+//     position: new Vec3(0, 1.5, -10),
+//     shape: new Box(new Vec3(4, 1, 2),)
+// })
 
-// testBody.position.set(0, 5, -30)
-// world.addBody(testBody)
-
-
-function printTrigger(event) {
-    console.log(event)
-    console.log(triggerBody.world)
-    bodiesToRemove.push(triggerBody)
-    world.addBody(sphereBody)
-    triggerBody.removeEventListener("collide", printTrigger)
-}
-triggerBody.addEventListener("collide", printTrigger)
-const bodiesToRemove = []
-
-const roads = []
-
+// function printTrigger(event) {
+//     console.log(event)
+//     console.log(triggerBody.world)
+//     bodiesToRemove.push(triggerBody)
+//     triggerBody.removeEventListener("collide", printTrigger)
+// }
+// triggerBody.addEventListener("collide", printTrigger)
+// const bodiesToRemove = []
 
 const testMat = new MeshBasicMaterial({
-    color: new Color(0x82898c)
+    color: new Color(0x82898c),
+    side: DoubleSide
 })
+const mountainMat = new MeshBasicMaterial({
+    color: new Color(0x00898c),
+    side: DoubleSide
+})
+// load in the road models from the scene file list
+const models = scene.models;
 
 const loader = new GLTFLoader()
-loader.load(MODEL1, (gltf) => {
-    const road = new Road(gltf, testMat)
-    world.addBody(road.body)
-    scene.add(road.mesh)
-})
-loader.load(MODEL2, (gltf) => {
-    const road = new Road(gltf, testMat)
-    world.addBody(road.body)
-    scene.add(road.mesh)
-})
+loadRoads(models)
 
-// world.add(roads[0].body)
-// console.log(roads[0])
-// world.addBody(roads[0].body)
-// scene.add(roads[0].mesh)
-
-// world.addBody(roads[1].body)
-// scene.add(roads[1].mesh)
-// roads[1].rotate(0, Math.PI, 0)
+function loadRoads(roadModelsToLoad){
+    for (let i = 0; i < roadModelsToLoad.length; i++) {
+        loader.load(roadModelsToLoad[i], (gltf) => {
+            let mat;
+            if (i == 1){
+                mat = mountainMat;
+            } else mat = testMat;
+            const road = new Road(gltf, mat);
+            world.addBody(road.body);
+            scene.add(road.mesh);
+            if (i == 1) road.translate(0, 0, -10)
+            scene.roads.push(road);
+        })
+    }
+}
 
 const cannonDebugger = new CannonDebugger(scene, world);
 const onAnimationFrameHandler = (timeStamp) => {
@@ -199,28 +180,17 @@ const onAnimationFrameHandler = (timeStamp) => {
     controls.update();
     inputControl.update();
     sound.update();
-    // camera.lookAt(scene.target.position);
-    // boxRay = new Ray(boxBody.position.clone().vadd(new Vec3(0, 4, 0)), boxBody.position.clone().vadd(new Vec3(0, -4, 0)))
-
-    // if (boxRay.result != null) console.log(boxRay.result)
     world.fixedStep();
-    // draw new ray
 
     cannonDebugger.update();
 
     // smoke.rotation.z += 1; UNCOMMENT WHEN WE GET SMOKE WORKING
     // smoke.position.z += 1;
     
-    
-
-    if (bodiesToRemove.length > 0) {
-        world.removeBody(bodiesToRemove[0])
-    }
+    // if (bodiesToRemove.length > 0) {
+    //     world.removeBody(bodiesToRemove[0])
+    // }
     // move all physics things and move their three visualizations along with them
-
-
-    sphereMesh.position.copy(sphereBody.position)
-    sphereMesh.quaternion.copy(sphereBody.quaternion)
     boxMesh.position.copy(boxBody.position)
     boxMesh.quaternion.copy(boxBody.quaternion)
     frustCull.update();
