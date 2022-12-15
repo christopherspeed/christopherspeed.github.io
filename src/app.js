@@ -7,7 +7,7 @@
  *
  */
 
-import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
+import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMaterial, Points, PointsMaterial, AdditiveBlending, Mesh, BoxGeometry, TextureLoader, sRGBEncoding, PlaneGeometry, MeshLambertMaterial, Group, Scene, BufferGeometry, MeshBasicMaterial, Color, ConvexGeometry, DoubleSide, FogExp2 } from 'three';
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SeedScene } from 'scenes';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -39,6 +39,12 @@ document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
 scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+
+
+const smokeParticleLocation = require("./components/textures/particlesmoke.png").default;
+const smokeParticleTexture = new TextureLoader().load(smokeParticleLocation);
+
+// createParticleSystem(scene); ADD THIS BACK IN WHEN NEEDED!
 
 /*
 // NOT PROPERLY IMPLEMENTED YET, NEEDS TO BE UNCOMMENTED/TWEAKED.
@@ -325,3 +331,43 @@ function testMouseStuff(event) {
     camera.rotateX(- event.movementY * 0.001)
 }
 
+// ADAPTED FROM THE FOLLOWING
+// CITATION: https://solutiondesign.com/insights/webgl-and-three-js-particles/
+function createParticleSystem(scene) {
+
+    // The number of particles in a particle system is not easily changed.
+    var particleCount = 2000;
+   
+    // Particles are just individual vertices in a geometry
+    // Create the geometry that will hold all of the vertices
+
+    const verts = [];
+   // Create the vertices and add them to the particles geometry
+    for (var p = 0; p < particleCount; p++) {
+        // This will create all the vertices in a range of -200 to 200 in all directions
+        var x = Math.random() * 400 - 200;
+        var y = Math.random() * 400 - 200;
+        var z = Math.random() * 400 - 200;
+    
+        // Create the vertex
+        var particle = new Vector3(x, y, z);
+    
+        // Add the vertex to the geometry
+        verts.push(particle);
+    }
+   
+    let particles = new BufferGeometry().setFromPoints( verts )
+   // Create the material that will be used to render each vertex of the geometry
+    var particleMaterial = new PointsMaterial(
+    {color: 0xffffff, 
+    size: 4,
+    map: smokeParticleTexture,
+    blending: AdditiveBlending,
+    transparent: false,
+    });
+   
+    // Create the particle system
+    const particleSystem = new Points(particles, particleMaterial);
+   
+   scene.add(particleSystem)
+}
