@@ -292,7 +292,7 @@ const onAnimationFrameHandler = (timeStamp) => {
     boxMesh.quaternion.copy(boxBody.quaternion)
 
     renderer.render(scene, camera);
-    scene.update && scene.update(timeStamp);
+    scene.update && scene.update(boxBody.position);
     window.requestAnimationFrame(onAnimationFrameHandler);
 };
 window.requestAnimationFrame(onAnimationFrameHandler);
