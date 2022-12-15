@@ -12,10 +12,12 @@ import { WebGLRenderer, PerspectiveCamera, Vector3, SphereGeometry, MeshNormalMa
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 import { MakeAudio } from './components/audio';
-import { InputControl } from './components/input';
+import { InputControl, PlayerVehicle } from './components/input';
 
-import { FrustumCulling, GameScene } from './components/scenes';
-import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh, Quaternion, ConvexPolyhedron } from 'cannon-es'
+
+import { GamePhysicsScene,  FrustumCulling, GameScene, SceneCustom, TestScene } from './components/scenes';
+import { World, Vec3, Body, Sphere, Plane, Box, Material, Cylinder, Ray, Trimesh, Quaternion, ConvexPolyhedron, RigidVehicle } from 'cannon-es'
+
 import CannonDebugger from 'cannon-es-debugger';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Road from './components/objects/Road/Road';
@@ -43,7 +45,10 @@ document.body.style.margin = 0; // Removes margin around page
 document.body.style.overflow = 'hidden'; // Fix scrolling
 document.body.appendChild(canvas);
 
+
+
 // scene.fog = new FogExp2(new Color(0x1b2e4d), .02);
+
 
 /*
 // NOT PROPERLY IMPLEMENTED YET, NEEDS TO BE UNCOMMENTED/TWEAKED.
@@ -93,6 +98,7 @@ scene.add(smoke);
 // controls.lookSpeed = 0.01;
 
 // Ew Orbit controls trash
+
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
@@ -107,6 +113,10 @@ const world = new World(
     }
 )
 
+
+const player = new PlayerVehicle(world, [10, 10, 0]);
+
+/*
 const boxBody = new Body({
     shape: new Sphere(1),
     mass: 100,
@@ -116,17 +126,22 @@ const boxBody = new Body({
         friction: 0.5
     }),
     fixedRotation: true
-})
-boxBody.position.set(-20, 120, 0)
 
-const inputControl = new InputControl(camera, scene, boxBody, sound);
+})*/
+const boxBody = player.chassis;
+
+boxBody.position.set;
+console.log(boxBody.position)
+
 
 const material = new MeshNormalMaterial()
 const box_geo = new BoxGeometry(1, 1, 2);
 const boxMesh = new Mesh(box_geo, material);
-scene.add(boxMesh)
 
-world.addBody(boxBody)
+// scene.add(boxMesh, sphereMesh)
+const inputControl = new InputControl(camera, scene, player, boxMesh, sound);
+
+scene.add(boxMesh)
 // testing the trigger
 // const triggerBody = new Body({
 //     isTrigger: true,
