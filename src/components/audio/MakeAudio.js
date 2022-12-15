@@ -3,7 +3,7 @@ import {AudioListener, Audio, AudioLoader} from 'three'
 class MakeAudio{
     constructor(camera){
         const beepSound = require("./censor.mp3").default;
-        const bgMusic =  require("./backgroundMusic.mp3").default;;
+        const bgMusic =  require("./guitarBGM.mp3").default;;
 
         const listener = new AudioListener();
         camera.add( listener );

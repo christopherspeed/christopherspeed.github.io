@@ -67,7 +67,7 @@ class Tree extends Group {
         if(this.tree != undefined && this.lowrestree != undefined) {
             
             if(this.tree.isObject3D && this.lowrestree.isObject3D) {
-                if (dist.length() > 40) {
+                if (dist.length() > 30) {
                     this.tree.visible = false;
                     this.lowrestree.visible = true;
                 } else {

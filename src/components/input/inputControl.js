@@ -224,10 +224,11 @@ class InputControl {
                     if(this.keyMap['arrowright'] == 1) this.keyMap['arrowright'] = 0.5;
                     break;
                 case 'k':
-                    if (this.audio.guitar.isPlaying) {
-                        this.audio.guitar.pause();
+                    console.log(this.audio.bg);
+                    if (this.audio.bg.isPlaying) {
+                        this.audio.bg.pause();
                     } else {
-                        this.audio.guitar.play();
+                        this.audio.bg.play();
                     }
                     break;
                 case 'l':

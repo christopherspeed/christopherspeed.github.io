@@ -20,64 +20,25 @@ class GameScene extends Scene {
         this.roads = [];
         this.models = [];
         this.models.push(
-            //MOUNTAIN,
+            MOUNTAIN,
             ROAD,
-            //EDGE
+            EDGE
         );
-        const loader = new GLTFLoader();
-        const temp = this;
-        function loadRoad (gltf) {
-            gltf.scene.traverse(function(child) {
-                if(child.isMesh) {
-                    if(child.name == "Cylinder001_1") {
-                        child.material = texMaterial;
-                    } else {
-                        child.material = new MeshToonMaterial({color:0x4f2f2f});
-                    }
-                }
-            })
-            temp.tree = gltf.scene;
-            temp.add(gltf.scene);
-            
-        }
         
-        loader.load(ROAD, loadRoad);
 
-        const tree1 = new Tree();
-        tree1.position.add(new Vector3(5, 0, 0))
-        const left_trees = []
-        const right_trees = []
-        for (let i = 0; i < 5; i++){
-            left_trees[i] = tree1.clone();
-            left_trees[i].position.add(new Vector3(0, 0, 5 * (i + 1)))
-        }
-        for (let i = 0; i < 5; i++){
-            right_trees[i] = left_trees[i].clone();
-            left_trees[i].position.add(new Vector3(-10, 0, 0))
-        }
-        const both_sides_trees = left_trees.concat(right_trees); // a new array w/ refs to both
-        const copy_both = [];
-        for (let i = 0; i < both_sides_trees.length; i++){
-            copy_both[i] = both_sides_trees[i].clone();
-        }
-        for (let i = 0; i < copy_both.length; i++){
-            copy_both[i].position.add(new Vector3(0, 0, 25))
-            this.add(copy_both[i])
-        }
-        for (let i = 0; i < left_trees.length; i++){
-            this.add(left_trees[i]);
-            this.add(right_trees[i]);
-        }
+        
+        const trees = [];
+        
 
         // more trees
         const moreTrees = []
 
-        for (let i = 0; i < 20; i++){
+        for (let i = 0; i < 15; i++){
             moreTrees.push(new Tree());
         }
 
         for (let i = 0; i < moreTrees.length; i++){
-            moreTrees[i].position.add(new Vector3(randFloat(-1, 6), 10, randFloat(-40, 40) + 30));
+            moreTrees[i].position.add(new Vector3(randFloat(-1, 6), 10.1, randFloat(0, 40) + 50));
             this.add(moreTrees[i])
         }
 
