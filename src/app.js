@@ -202,10 +202,11 @@ const boxBody = new Body({
 })*/
 const boxBody = player.chassis;
 boxBody.quaternion.setFromEuler(-Math.PI/2, Math.PI/2, 0);
-console.log(boxBody.position)
 
 
-const materialBox = new MeshNormalMaterial()
+const materialBox = new MeshToonMaterial({
+    color: new Color(0xFF0000)
+})
 const box_geo = new BoxGeometry(1, 1, 2);
 const boxMesh = new Mesh(box_geo, materialBox);
 
@@ -235,24 +236,6 @@ for(let i = 0; i < wheelBodies.length; i++ ){
 
 // scene.add(boxMesh, sphereMesh)
 const inputControl = new InputControl(camera, scene, player, boxMesh, sound, hud);
-
-
-// testing the trigger
-// const triggerBody = new Body({
-//     isTrigger: true,
-//     type: Body.STATIC,
-//     position: new Vec3(0, 1.5, -10),
-//     shape: new Box(new Vec3(4, 1, 2),)
-// })
-
-// function printTrigger(event) {
-//     console.log(event)
-//     console.log(triggerBody.world)
-//     bodiesToRemove.push(triggerBody)
-//     triggerBody.removeEventListener("collide", printTrigger)
-// }
-// triggerBody.addEventListener("collide", printTrigger)
-// const bodiesToRemove = []
 
 const testMat = new MeshToonMaterial({
     color: new Color(0x111111),
@@ -293,11 +276,45 @@ function loadBodies(roadModelsToLoad){
     }
 }
 
+// add end-of-game trigger 
+const gameEndBody = new Body({
+    isTrigger: true,
+    shape: new Box(new Vec3(4, 4, 4)),
+    position: new Vec3(27, 45, -9),
+    type: Body.STATIC
+})
 
+// bottom of world handling
+const killBody = new Body({
+    isTrigger: true,
+    shape: new Box(new Vec3(100, 4, 100)),
+    position: new Vec3(0, -10, 0),
+    type: Body.STATIC
+})
+world.addBody(killBody)
+killBody.addEventListener("collide", endGame)
+gameEndBody.addEventListener("collide", endGame)
+// testing the trigger
+// const triggerBody = new Body({
+//     isTrigger: true,
+//     type: Body.STATIC,
+//     position: new Vec3(0, 1.5, -10),
+//     shape: new Box(new Vec3(4, 1, 2),)
+// })
+function endGame(){
+    console.log("Game Over!")
+    world.removeBody(boxBody)
+}
+// function printTrigger(event) {
+//     console.log(event)
+//     console.log(triggerBody.world)
+//     bodiesToRemove.push(triggerBody)
+//     triggerBody.removeEventListener("collide", printTrigger)
+// }
+// triggerBody.addEventListener("collide", printTrigger)
+// const bodiesToRemove = []
+world.addBody(gameEndBody)
 
-// world.addBody(roads[1].body)
-// scene.add(roads[1].mesh)
-// roads[1].rotate(0, Math.PI, 0)
 var sceneR = menu;
 
 const cannonDebugger = new CannonDebugger(scene, world);
@@ -311,8 +328,8 @@ const onAnimationFrameHandler = (timeStamp) => {
     world.step(1/60);
     //world.fixedStep();
 
-    //cannonDebugger.update();
-
+    cannonDebugger.update();
+    console.log(boxBody.position)
     // particleSystem.position.y += 0.1;
     updateParticleSystem(particleSystem);
 
